@@ -6,6 +6,8 @@ This repository contains weekly Spring Boot projects completed as part of my bac
 | Week | Topic | Key Concepts | Project Link |
 |------|------|--------------|--------------|
 | 01 | Dependency Injection | IoC, Bean Management | Coming soon |
+| 02 | Employee & Department REST API | HTTP Communication, Controllers, Request Methods (GET, POST, PUT, DELETE), Status Codes | 
+
 
 ---
 
