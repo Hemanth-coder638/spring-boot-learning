@@ -4,7 +4,7 @@
 
 ### Project: Employee & Department Management API
 This module focuses on how backend services communicate over HTTP.  
-It includes:
+#It includes:
 
 - RESTful API design
 - Request Handling with `@RequestMapping`, `@GetMapping`, `@PostMapping`, etc.
