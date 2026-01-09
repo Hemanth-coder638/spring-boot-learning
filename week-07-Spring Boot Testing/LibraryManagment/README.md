@@ -26,9 +26,9 @@ No controllers
 Isolated
 Medium speed
 Database required?
-✅ YES (but NOT Postgres)
+ YES (but NOT Postgres)
 Recommended DB
-👉 H2 in-memory
+ H2 in-memory
 
 C. Integration Tests (API level)
 *Goal
@@ -38,7 +38,7 @@ Serialization / deserialization
 Validation
 Transactions
 Database required?
-✅ YES
+ YES
 Two professional options
 H2 (Postgres compatibility mode) → simpler
 Testcontainers (Real Postgres) → enterprise-grade
