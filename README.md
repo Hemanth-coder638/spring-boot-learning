@@ -12,6 +12,8 @@ This repository contains weekly Spring Boot projects completed as part of my bac
 | 05 |User & Posts Service - Spring Security Fundamentals| Spring Security Filter Chain,AuthenticationManager & AuthenticationProvider,UserDetailsService & PasswordEncoder,SecurityContext & SecurityContextHolder,Stateless Authentication Architecture,*Token-Based Security:JWT (JSON Web Tokens),Token generation & validation,Claims handling,Stateless session management,Access token flow for secured REST APIs|Coming soon
 | 06 |User & Posts Service -Spring Security Advanced|*Authorization & Access Control:Role-based authorization,Endpoint-level security,Custom security configurations.*OAuth2 & Social Login:Google OAuth2 integration,OAuth2 login flow understanding,Secure handling of client ID & client secret via environment variables.*Data & Persistence:Spring Data JPA,MySQL.*API Development & Testing:RESTful API design,Postman for API testing & token validation|Coming soon
 
+| 07 | Library Management System – Testing (Unit & Integration) | JUnit 5, Mockito, MockMvc, Unit Testing (Service & Controller), Integration Testing (Repository & Controller), Testcontainers (PostgreSQL), Spring Boot Test Context, Test Isolation, JaCoCo Code Coverage, Real-World Test Debugging | Week-07-Library-Management-Testing |
+
 
 
 
