@@ -1,4 +1,4 @@
-8.1 – Setting Up a Production Database with Amazon RDS (AWS Free Tier)
+#8.1 – Setting Up a Production Database with Amazon RDS (AWS Free Tier)
 
 1. Why a Production Database Needs Special Treatment
 
@@ -192,3 +192,4 @@ it is an operational responsibility.
 Understanding why each component exists is what separates:
 *Someone who can deploy
 *From someone who can own production systems
+
