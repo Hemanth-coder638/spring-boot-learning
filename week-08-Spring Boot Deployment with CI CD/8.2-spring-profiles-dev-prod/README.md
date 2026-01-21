@@ -1,46 +1,60 @@
-8.2 🌱 Spring Profiles (dev / prod)
-1.What is Spring Profile?
+# 8.2 🌱 Spring Profiles (dev / prod)
 
-Spring Profile is a Spring feature used to run the same application in different environments like:
-*Development (dev)
-*Production (prod)
-*Testing (test)
+---
 
-Each environment has different settings, mainly:
+## 1. What is Spring Profile?
 
-*Database
-*Credentials
-*URLs
-*Logging level
+Spring Profile is a Spring feature used to run the **same application** in **different environments** like:
 
-Instead of changing code every time, Spring Profiles help us switch environments safely.
+- Development (`dev`)
+- Production (`prod`)
+- Testing (`test`)
 
-2.Why Do We Need Spring Profiles?
+Each environment has different configurations, mainly:
+
+- Database
+- Credentials
+- URLs
+- Logging level
+
+Instead of changing code again and again, **Spring Profiles help us switch environments safely**.
+
+---
+
+## 2. Why Do We Need Spring Profiles?
 
 In real projects:
 
-*Prod database → AWS RDS
-*Dev secrets → local
-*Prod secrets → environment variables
-*Dev database → local / test DB
+- Prod database → AWS RDS  
+- Dev secrets → Local machine  
+- Prod secrets → Environment variables  
+- Dev database → Local / test DB  
 
-❌ If we mix everything in one file → mistakes happen
-❌ Secrets may get pushed to GitHub
-❌ Prod DB may break during testing
+### Without profiles ❌
+- Everything in one file → mistakes happen  
+- Secrets may get pushed to GitHub  
+- Production DB may break during testing  
 
-✅ Profiles solve this cleanly and professionally
+### With profiles ✅
+- Clean separation of environments  
+- Safe deployments  
+- Industry-standard practice  
 
-3.Core Idea (Very Important)
+---
 
-One profile = one environment
-Only ONE profile is active at a time.
+## 3. Core Idea (Very Important)
 
-Spring decides:
+👉 **One profile = one environment**  
+👉 **Only ONE profile is active at a time**
 
-1.Which property file to load
-2.Which beans to create
+Spring decides two things based on profile:
 
-Using ONE single switch 👇
+1. Which property file to load  
+2. Which beans to create  
+
+Using one switch 👇
+
+```properties
 spring.profiles.active=dev
 or
 spring.profiles.active=prod
@@ -225,3 +239,4 @@ Properties decide database
 Code remains same
 
 This is how real production systems handle dev → prod switching safely.
+
