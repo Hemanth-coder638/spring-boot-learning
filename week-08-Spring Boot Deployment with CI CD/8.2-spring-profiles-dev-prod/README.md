@@ -54,7 +54,7 @@ Spring decides two things based on profile:
 
 Using one switch 👇
 
-```properties
+properties
 spring.profiles.active=dev
 or
 spring.profiles.active=prod
@@ -62,10 +62,12 @@ spring.profiles.active=prod
 4.Property Files Structure
 
 Typical setup:
-
+```
+spring.profiles.active=dev
 application.properties
 application-dev.properties
 application-prod.properties
+```
 
 What Spring does:
 File	                          Purpose
@@ -73,7 +75,7 @@ application.properties	      Common settings
 application-dev.properties	  Dev DB + configs
 application-prod.properties	  Prod DB + configs
 
-🔁 How Spring Decides Which File to Use
+## 4.How Spring Decides Which File to Use
 
 Let’s say this is set:
 spring.profiles.active=dev
@@ -89,10 +91,10 @@ Step-by-step:
 5.Ignores application-prod.properties
 👉 Only dev properties are now available in memory
 
-5.Using @Profile with Beans
+## 5.Using @Profile with Beans
 
 Now look at this code 👇
-
+```
 @Profile("dev")
 @Bean
 public DataSource devDataSource() {
@@ -104,7 +106,7 @@ public DataSource devDataSource() {
 public DataSource prodDataSource() {
     return new HikariDataSource();
 }
-
+```
 What Spring checks internally:
 
 *Active profile = dev
@@ -129,7 +131,7 @@ This line:
 *ONLY creates DataSource object
 The database details are already decided earlier.
 
-6.How Does DataSource Get DB Details?
+## 6.How Does DataSource Get DB Details?
 
 Spring Boot uses auto-binding.
 
@@ -162,6 +164,7 @@ spring.datasource.password=${DB_PASSWORD}
 👉 Controlled only by profile
 
 🧠 Correct Execution Order (Must Remember)
+```
 spring.profiles.active
         ↓
 Loads application-<profile>.properties
@@ -169,18 +172,18 @@ Loads application-<profile>.properties
 @Profile beans are filtered
         ↓
 DataSource auto-binds properties
-
+```
 
 This is the exact internal flow.
 
-⚠️ Common Mistakes Developers Make
+## ⚠️ Common Mistakes Developers Make
 *Thinking DataSource method chooses DB ❌
 *Mixing dev & prod properties ❌
 *Forgetting spring.profiles.active ❌
 *Hardcoding passwords ❌
 *Pushing secrets to GitHub ❌
 
-✅ Best Practice (Industry Standard)
+## ✅ Best Practice (Industry Standard)
 
 *Use properties-only profiles for most cases
 *Use @Profile beans only when behavior differs
@@ -216,6 +219,7 @@ AWS / CI-CD:
 SPRING_PROFILES_ACTIVE=prod
 
 Step 4️⃣ (Optional) Use Profile-based DataSource
+```
 @Configuration
 public class DataSourceConfig {
 
@@ -231,7 +235,7 @@ public class DataSourceConfig {
         return new HikariDataSource();
     }
 }
-
+```
 🎯 Final Takeaway
 
 Profile decides properties
@@ -239,4 +243,5 @@ Properties decide database
 Code remains same
 
 This is how real production systems handle dev → prod switching safely.
+
 
