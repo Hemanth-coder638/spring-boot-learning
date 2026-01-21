@@ -194,8 +194,10 @@ This means your V1__init.sql ran successfully and the database is updated. 🎉
 
 Besides auto-running on app startup, you can use the Flyway Command-Line Tool (CLI) separately. The CLI is useful for manual checks or CI pipelines. 
 To use it: 
-### 1. Install Flyway CLI: Download from Flyway website or use a package manager.
-### 2. Configure Flyway: Edit flyway.conf (or flyway.toml) with your DB connection, for example:
+### 1. Install Flyway CLI: 
+Download from Flyway website or use a package manager.
+### 2. Configure Flyway: 
+Edit flyway.conf (or flyway.toml) with your DB connection, for example:
 ```
 flyway.url=jdbc:postgresql://<RDS-endpoint>:5432/mydb
 flyway.user=mydb_user
@@ -255,5 +257,6 @@ Start your Spring Boot app (e.g. ./mvnw spring-boot:run or run the jar). Flyway 
 ### 6.	Verify the migration: 
 You can connect to the RDS Postgres (using psql, DBeaver, or the AWS Console “Query Editor”) and check that your tables exist and flyway_schema_history is populated. Everything should match what your SQL scripts defined.
 By following these steps, your Spring Boot app should now be using AWS RDS PostgreSQL, with Flyway automatically migrating the schema on startup. 🎉
+
 
 
