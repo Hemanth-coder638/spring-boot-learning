@@ -86,8 +86,8 @@ Step-by-step:
 2.Reads spring.profiles.active
 3.Finds active profile = dev
 4.Loads files in this order:
-  *application.properties
-  *application-dev.properties
+  - application.properties
+  - application-dev.properties
 5.Ignores application-prod.properties
 👉 Only dev properties are now available in memory
 
@@ -109,9 +109,9 @@ public DataSource prodDataSource() {
 ```
 What Spring checks internally:
 
-*Active profile = dev
-*@Profile("dev") → ✅ create bean
-*@Profile("prod") → ❌ skip bean
+- Active profile = dev
+- @Profile("dev") → ✅ create bean
+- @Profile("prod") → ❌ skip bean
 
 👉 Only ONE DataSource bean exists at runtime
 
@@ -126,9 +126,9 @@ return new HikariDataSource();
 
 This line:
 
-*DOES NOT choose database
-*DOES NOT choose properties
-*ONLY creates DataSource object
+- DOES NOT choose database
+- DOES NOT choose properties
+- ONLY creates DataSource object
 The database details are already decided earlier.
 
 ## 6.How Does DataSource Get DB Details?
@@ -137,9 +137,9 @@ Spring Boot uses auto-binding.
 
 When DataSource bean is created, Spring automatically injects values from:
 
-spring.datasource.url
-spring.datasource.username
-spring.datasource.password
+- spring.datasource.url
+- spring.datasource.username
+- spring.datasource.password
 
 From already loaded profile file.
 
@@ -177,18 +177,18 @@ DataSource auto-binds properties
 This is the exact internal flow.
 
 ## ⚠️ Common Mistakes Developers Make
-*Thinking DataSource method chooses DB ❌
-*Mixing dev & prod properties ❌
-*Forgetting spring.profiles.active ❌
-*Hardcoding passwords ❌
-*Pushing secrets to GitHub ❌
+- Thinking DataSource method chooses DB ❌
+- Mixing dev & prod properties ❌
+- Forgetting spring.profiles.active ❌
+- Hardcoding passwords ❌
+- Pushing secrets to GitHub ❌
 
 ## ✅ Best Practice (Industry Standard)
 
-*Use properties-only profiles for most cases
-*Use @Profile beans only when behavior differs
-*Use environment variables in prod
-*Never hardcode secrets
+- Use properties-only profiles for most cases
+- Use @Profile beans only when behavior differs
+- Use environment variables in prod
+- Never hardcode secrets
 
 🛠️ Fixed Physical Steps (How to Do It Practically)
 Step 1️⃣Create property files
@@ -243,5 +243,6 @@ Properties decide database
 Code remains same
 
 This is how real production systems handle dev → prod switching safely.
+
 
 
