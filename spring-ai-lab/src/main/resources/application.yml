@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: spring-ai-lab
+  datasource:
+    url: jdbc:postgresql://localhost:5433/spring_ai_lab
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  profiles:
+    active: ollama
+  ai:
+    openai:
+      enabled: false
+server:
+  port: 9090
