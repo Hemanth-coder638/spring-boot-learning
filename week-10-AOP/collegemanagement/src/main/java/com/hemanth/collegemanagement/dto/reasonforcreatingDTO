@@ -1,0 +1,4 @@
+// Without DTOs (Problem):
+// Student → Professor → Student → Professor → ∞ (StackOverflow!)
+// With DTOs (Solution):
+// StudentDto → professorIds (just IDs, no objects)

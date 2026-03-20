@@ -1,0 +1,182 @@
+@startuml
+class com.hemanth.collegemanagement.dto.SubjectDto {
+- Long id
+- String title
+- Long professorId
+- Set<Long> studentIds
+}
+
+interface com.hemanth.collegemanagement.repository.AdmissionRecordRepository {
+}
+class com.hemanth.collegemanagement.service.StudentServiceImpl {
+- StudentRepository studentRepository
+- ProfessorRepository professorRepository
+- SubjectRepository subjectRepository
++ StudentDto createStudent(StudentDto)
++ StudentDto getStudent(Long)
++ List<StudentDto> getAllStudents()
++ StudentDto updateStudent(Long,StudentDto)
++ void deleteStudent(Long)
++ StudentDto addProfessorToStudent(Long,Long)
++ StudentDto addSubjectToStudent(Long,Long)
+- StudentDto toDto(StudentEntity)
+}
+
+
+class com.hemanth.collegemanagement.dto.ProfessorDto {
+- Long id
+- String title
+- Set<Long> subjectIds
+- Set<Long> studentIds
+}
+
+class com.hemanth.collegemanagement.controller.ProfessorController {
+- ProfessorService professorService
++ ResponseEntity<ProfessorDto> create(ProfessorDto)
++ ResponseEntity<ProfessorDto> get(Long)
++ ResponseEntity<List<ProfessorDto>> all()
++ ResponseEntity<ProfessorDto> update(Long,ProfessorDto)
++ ResponseEntity<Void> delete(Long)
+}
+
+
+class com.hemanth.collegemanagement.entity.SubjectEntity {
+- Long id
+- String title
+- ProfessorEntity professor
+- Set<StudentEntity> studentEntities
+}
+
+class com.hemanth.collegemanagement.dto.StudentDto {
+- Long id
+- String name
+- Set<Long> professorIds
+- Set<Long> subjectIds
+- Long admissionRecordId
+}
+
+interface com.hemanth.collegemanagement.service.StudentService {
+~ StudentDto createStudent(StudentDto)
+~ StudentDto getStudent(Long)
+~ List<StudentDto> getAllStudents()
+~ StudentDto updateStudent(Long,StudentDto)
+~ void deleteStudent(Long)
+~ StudentDto addProfessorToStudent(Long,Long)
+~ StudentDto addSubjectToStudent(Long,Long)
+}
+
+class com.hemanth.collegemanagement.DataLoader {
+- StudentRepository studentRepository
+- ProfessorRepository professorRepository
+- SubjectRepository subjectRepository
++ void run(String)
+}
+
+
+interface com.hemanth.collegemanagement.repository.StudentRepository {
+~ Optional<StudentEntity> findWithRelationsById(Long)
+}
+
+class com.hemanth.collegemanagement.CollegemanagementApplication {
++ {static} void main(String[])
+}
+
+class com.hemanth.collegemanagement.advice.GlobalExceptionHandler {
++ ResponseEntity<GlobalResponse<Object>> handleNotFound(EntityNotFoundException)
++ ResponseEntity<GlobalResponse<Object>> handleAll(Exception)
+}
+
+class com.hemanth.collegemanagement.service.ProfessorServiceImpl {
+- ProfessorRepository professorRepository
++ ProfessorDto createProfessor(ProfessorDto)
++ ProfessorDto getProfessor(Long)
++ List<ProfessorDto> getAllProfessors()
++ ProfessorDto updateProfessor(Long,ProfessorDto)
++ void deleteProfessor(Long)
+- ProfessorDto toDto(ProfessorEntity)
+}
+
+
+class com.hemanth.collegemanagement.advice.GlobalResponse {
+- boolean success
+- String message
+- T data
+}
+
+class com.hemanth.collegemanagement.entity.ProfessorEntity {
+- Long id
+- String title
+- Set<SubjectEntity> subjectEntities
+- Set<StudentEntity> studentEntities
++ void addSubject(SubjectEntity)
++ void removeSubject(SubjectEntity)
+}
+
+
+class com.hemanth.collegemanagement.exception.ResourceNotFoundException {
+}
+class com.hemanth.collegemanagement.entity.AdmissionRecordEntity {
+- Long id
+- Integer fees
+- StudentEntity student
+}
+
+class com.hemanth.collegemanagement.controller.StudentController {
+- StudentService studentService
++ ResponseEntity<StudentDto> create(StudentDto)
++ ResponseEntity<StudentDto> get(Long)
++ ResponseEntity<List<StudentDto>> all()
++ ResponseEntity<StudentDto> update(Long,StudentDto)
++ ResponseEntity<Void> delete(Long)
++ ResponseEntity<StudentDto> addProfessor(Long,Long)
++ ResponseEntity<StudentDto> addSubject(Long,Long)
+}
+
+
+class com.hemanth.collegemanagement.entity.StudentEntity {
+- Long id
+- String name
+- Set<ProfessorEntity> professorEntities
+- Set<SubjectEntity> subjectEntities
+- AdmissionRecordEntity admissionRecord
++ void addProfessor(ProfessorEntity)
++ void removeProfessor(ProfessorEntity)
++ void addSubject(SubjectEntity)
++ void removeSubject(SubjectEntity)
++ void setAdmissionRecordBiDirectional(AdmissionRecordEntity)
+}
+
+
+interface com.hemanth.collegemanagement.repository.SubjectRepository {
+~ Optional<SubjectEntity> findWithRelationsById(Long)
+}
+
+interface com.hemanth.collegemanagement.repository.ProfessorRepository {
+~ Optional<ProfessorEntity> findWithRelationsById(Long)
+}
+
+class com.hemanth.collegemanagement.dto.AdmissionRecordDto {
+- Long id
+- Integer fees
+- Long studentId
+}
+
+interface com.hemanth.collegemanagement.service.ProfessorService {
+~ ProfessorDto createProfessor(ProfessorDto)
+~ ProfessorDto getProfessor(Long)
+~ List<ProfessorDto> getAllProfessors()
+~ ProfessorDto updateProfessor(Long,ProfessorDto)
+~ void deleteProfessor(Long)
+}
+
+
+
+org.springframework.data.jpa.repository.JpaRepository <|-- com.hemanth.collegemanagement.repository.AdmissionRecordRepository
+com.hemanth.collegemanagement.service.StudentService <|.. com.hemanth.collegemanagement.service.StudentServiceImpl
+org.springframework.boot.CommandLineRunner <|.. com.hemanth.collegemanagement.DataLoader
+org.springframework.data.jpa.repository.JpaRepository <|-- com.hemanth.collegemanagement.repository.StudentRepository
+com.hemanth.collegemanagement.service.ProfessorService <|.. com.hemanth.collegemanagement.service.ProfessorServiceImpl
+com.hemanth.collegemanagement.exception.RuntimeException <|-- com.hemanth.collegemanagement.exception.ResourceNotFoundException
+org.springframework.data.jpa.repository.JpaRepository <|-- com.hemanth.collegemanagement.repository.SubjectRepository
+org.springframework.data.jpa.repository.JpaRepository <|-- com.hemanth.collegemanagement.repository.ProfessorRepository
+@enduml

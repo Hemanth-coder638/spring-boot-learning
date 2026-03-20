@@ -1,0 +1,34 @@
+@startuml
+skinparam linetype ortho
+hide circle
+hide empty methods
+
+package "College Entities" {
+    class "StudentEntity" as Student {
+        - Long id
+        - String name
+    }
+
+    class "ProfessorEntity" as Professor {
+        - Long id
+        - String title
+    }
+
+    class "SubjectEntity" as Subject {
+        - Long id
+        - String title
+    }
+
+    class "AdmissionRecordEntity" as Admission {
+        - Long id
+        - Integer fees
+    }
+}
+
+'' Relationships
+Student "1" -- "1" Admission : has >
+Student "*" -- "*" Professor : enrolled with >
+Student "*" -- "*" Subject : studies >
+Professor "1" -- "*" Subject : teaches >
+
+@enduml
