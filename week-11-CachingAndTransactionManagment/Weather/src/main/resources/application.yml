@@ -1,0 +1,22 @@
+server:
+  port: 3434
+
+spring:
+  application:
+    name: Weather
+  cache:
+    type: redis
+
+  data:
+    redis:
+      host: redis-18271.c89.us-east-1-3.ec2.cloud.redislabs.com # Redis Cloud → replace
+      port: 18271
+      username: default
+      password: tsP9lMiG3zvTd6TJOHQc2GKl1kKucrjv
+      ssl:
+         enabled: false
+
+logging:
+  level:
+    org.springframework.cache: DEBUG
+    com.weather: DEBUG
