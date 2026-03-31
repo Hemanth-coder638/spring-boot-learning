@@ -1,0 +1,28 @@
+server:
+  port: 1212
+
+spring:
+  application:
+    name: Banking
+  datasource:
+    url: jdbc:postgresql://localhost:5432/bankingdatabase
+    username: postgres
+    password: '7878'  # Use quotes for numeric passwords to avoid parsing issues
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update # 'create' wipes data every restart; 'update' is usually safer for dev
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  logging:
+    level:
+      org:
+        hibernate:
+          SQL: DEBUG
+          type:
+            descriptor:
+              sql:
+                BasicBinder: TRACE
