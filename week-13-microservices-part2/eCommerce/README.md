@@ -118,7 +118,7 @@ Client -> API Gateway -> Authentication Filter -> Authorization Filter -> Micros
 
 **Video Placeholder**
 
-<!-- Add working video here -->
+https://github.com/user-attachments/assets/b9ca6c3b-1696-4864-bf4f-2334cda47310
 
 ---
 
@@ -136,7 +136,7 @@ API Gateway -> Order Service -> Inventory Service -> Shipping Service
 
 **Video Placeholder**
 
-<!-- Add working video here -->
+https://github.com/user-attachments/assets/3f79eef1-f891-44b2-902f-62200e449a70
 
 ---
 
@@ -154,7 +154,7 @@ Spring Boot Apps -> Logstash -> Elasticsearch -> Kibana
 
 **Video Placeholder**
 
-<!-- Add working video here -->
+https://github.com/user-attachments/assets/2138eabc-1045-4b22-afea-d6de412d53a6
 
 ---
 
