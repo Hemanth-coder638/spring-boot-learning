@@ -177,7 +177,7 @@ shipping-service.yml
 
 **Video Placeholder**
 
-<!-- Add working video here -->
+https://github.com/user-attachments/assets/e5f93693-ab7a-4d21-a3dd-09a3a328a957
 
 ---
 
