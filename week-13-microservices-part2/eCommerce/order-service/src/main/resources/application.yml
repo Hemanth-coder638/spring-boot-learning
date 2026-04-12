@@ -1,0 +1,87 @@
+spring:
+  application:
+    name: order-service
+  config:
+    import: configserver:http://localhost:8888
+
+
+#github:
+#  config:
+#    test:
+#      variable: success
+#server:
+#  servlet:
+#    context-path: /orders
+#  port: 9021
+
+#spring:
+#  application:
+#    name: order-service
+#
+#  datasource:
+#    url: jdbc:postgresql://localhost:5432/orderDB
+#    username: postgres
+#    password: 7878
+#
+#  jpa:
+#    hibernate:
+#      ddl-auto: create-drop
+#    show-sql: true
+#    properties:
+#      hibernate:
+#        format_sql: true
+#
+#management:
+#  health:
+#  circuitbreakers:
+#  enabled: true
+#
+#resilience4j:
+#  retry:
+#    configs:
+#      default:
+#        maxRetryAttempts: 3
+#        waitDuration: 100ms
+#
+#    instances:
+#      inventoryRetry:
+#        baseConfig: default
+#        waitDuration: 200ms
+#
+#      shippingRetry:
+#        baseConfig: default
+#        waitDuration: 200ms
+#
+#  ratelimiter:
+#    instances:
+#      inventoryRateLimiter:
+#        limitRefreshPeriod: 1s
+#        limitForPeriod: 100
+#        timeoutDuration: 10ms
+#
+#  circuitbreaker:
+#    instances:
+#      inventoryCircuitBreaker:
+#        registerHealthIndicator: true
+#        slidingWindowSize: 10
+#        slidingWindowType: COUNT_BASED
+#        minimumNumberOfCalls: 10
+#        failureRateThreshold: 50
+#        waitDurationInOpenState: 1s
+#        permittedNumberOfCallsInHalfOpenState: 3
+#
+#      shippingCB:
+#        registerHealthIndicator: true
+#        slidingWindowSize: 10
+#        slidingWindowType: COUNT_BASED
+#        minimumNumberOfCalls: 5
+#        failureRateThreshold: 50
+#        waitDurationInOpenState: 1s
+#        permittedNumberOfCallsInHalfOpenState: 3
+#
+#eureka:
+#  client:
+#    service-url:
+#      defaultZone: http://localhost:8761/eureka
+#  instance:
+#    prefer-ip-address: true
