@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: inventory-service
+  config:
+    import: configserver:http://localhost:8888
+
+
+
+#server:
+#  servlet:
+#    context-path: /inventory
+#  port: 9011
+#
+#spring:
+#  application:
+#    name: inventory-service
+#  datasource:
+#    url: jdbc:postgresql://localhost:5432/inventoryDB
+#    username: postgres
+#    password: 7878
+#
+#  jpa:
+#    hibernate:
+#      ddl-auto: create-drop
+#    show-sql: true
+#    properties:
+#      hibernate:
+#        format_sql: true
+#    defer-datasource-initialization: true
+#
+#  sql:
+#    init:
+#      mode: always
+#      data-locations: classpath:data.sql
+#
+#eureka:
+#  client:
+#    service-url:
+#      defaultZone: http://localhost:8761/eureka
+#instance:
+#    prefer-ip-address: true
+#    instance-id: ${spring.application.name}:${server.port}

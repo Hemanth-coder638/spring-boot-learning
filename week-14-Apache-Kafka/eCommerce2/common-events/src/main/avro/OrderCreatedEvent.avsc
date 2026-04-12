@@ -1,0 +1,23 @@
+{
+  "type": "record",
+  "name": "OrderCreatedEvent",
+  "namespace": "com.hemanth.common.event",
+  "fields": [
+    { "name": "orderId", "type": "long" },
+    {
+      "name": "items",
+      "type": {
+        "type": "array",
+        "items": {
+          "type": "record",
+          "name": "OrderCreatedItemEvent",
+          "fields": [
+            { "name": "productId", "type": "long" },
+            { "name": "quantity", "type": "int" }
+          ]
+        }
+      }
+    },
+    { "name": "totalPrice", "type": ["null", "double"], "default": null }
+  ]
+}

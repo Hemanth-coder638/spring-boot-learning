@@ -1,0 +1,9 @@
+{
+  "type": "record",
+  "name": "OrderCreatedItemEvent",
+  "namespace": "com.hemanth.common.event",
+  "fields": [
+    { "name": "productId", "type": "long" },
+    { "name": "quantity", "type": "int" }
+  ]
+}

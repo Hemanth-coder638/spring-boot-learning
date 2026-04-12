@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- Root project does NOT need Spring Boot parent -->
+    <!-- It's just a container for modules -->
+    <groupId>com.hemanth</groupId>
+    <artifactId>ecommerce2</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>common-events</module>
+        <module>order-service</module>
+        <module>inventory-service</module>
+        <module>notification-service</module>
+    </modules>
+
+</project>

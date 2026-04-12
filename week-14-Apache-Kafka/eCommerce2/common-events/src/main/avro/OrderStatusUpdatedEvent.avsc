@@ -1,0 +1,11 @@
+{
+  "type": "record",
+  "name": "OrderStatusUpdatedEvent",
+  "namespace": "com.hemanth.common.event",
+  "fields": [
+    { "name": "orderId", "type": "long" },
+    { "name": "status", "type": "string" },
+    { "name": "message", "type": "string" },
+    { "name": "totalPrice", "type": ["null", "double"], "default": null }
+  ]
+}
