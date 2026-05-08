@@ -101,11 +101,22 @@ For example configuration, we might have (in Spring Boot) a `NewTopic("order_cre
 
 ### Before Schema Registry  
 Initially (before adding Schema Registry), the application may have used plain JSON for messages. For instance, the `order_created` event could have been a JSON string of the order data. In Spring Boot, the producer would serialize a Java object to JSON (using `StringSerializer` or Jackson), and the consumer would deserialize JSON back to a map or POJO. This works, but it has drawbacks: there’s no enforcement of a schema, and if one service changes its data model, other services may break. Also, large JSON text incurs overhead and duplicative parsing.  
+### Screen Recording of Before Schema Registry of eCommerce2 application
+* Below Screen Record demonstrates how only normal common events works with kafka
+
+https://github.com/user-attachments/assets/c5ea4c91-6b41-49ee-99d5-78e50dd15fa9
 
 Practically, without Schema Registry we likely faced issues such as mismatched class definitions and manual maintenance of compatibility. In our earlier tests (see screen recordings), we observed errors when consumers expected a certain JSON structure that the producer changed. 
 
 ### After Schema Registry  
 To address that, we switched to **Avro** with Confluent Schema Registry. Now each event class (like `OrderCreatedEvent`) is defined with an Avro schema. We added the Schema Registry container (listening on port 8081) and updated both services’ configurations to use `KafkaAvroSerializer/Deserializer` pointing at that registry.  Each service now depends on a shared Avro-generated Java class (e.g. via `schema-registry-maven-plugin` or Confluent’s tools). 
+
+
+### Screen Recording of After Schema Registry of eCommerce2 application
+* Below Screen Record demonstrates how schema registry works with kafka
+* Shows Avro-based kafka flow
+
+https://github.com/user-attachments/assets/85c197be-2415-4b55-814c-edd90f59bf4f
 
 With Schema Registry in place, sending an event looks like:  
 ```java
@@ -190,3 +201,251 @@ This service is very lightweight – it could simply write to a log or notify an
 Each of these challenges was addressed through configuration changes and code tweaks, as illustrated in our screen recordings. The final solution achieves a stable, schema-validated Kafka pipeline. 
 
 **References:** We relied on official Kafka and Confluent documentation for definitions and best practices【17†L195-L203】【13†L781-L789】【23†L310-L319】, as well as community tutorials and blog posts on Kafka architecture and Spring Boot integration【19†L49-L54】【40†L30-L33】【42†L66-L73】. These sources guided our design of an event-driven, schema-governed microservices system.
+
+
+## Docker Setup, Problems Faced, and Final Kafka + Schema Registry Configuration
+
+This project runs with three supporting Docker services:
+
+- Kafka broker
+- Schema Registry
+- Kafka UI
+
+The Spring Boot microservices (`order-service`, `inventory-service`, and `notification-service`) run from IntelliJ on the host machine, while Kafka-related infrastructure runs inside Docker. That is why the Docker networking and Kafka listener configuration matter a lot.
+
+---
+
+### 1) Why the Docker setup was needed
+
+Kafka messages in this project are written in Avro format and decoded using Schema Registry.  
+Kafka UI is used to visually inspect topics and messages.  
+Schema Registry stores the Avro schema versions and helps Kafka producers and consumers share the same message contract.
+
+Without Schema Registry, the project had issues like:
+
+- message format mismatch
+- consumer deserialization errors
+- classloader conflicts
+- unreadable message payloads in Kafka UI
+
+---
+
+### 2) Problem faced during setup
+
+While configuring Kafka, Kafka UI, and Schema Registry, several issues appeared:
+
+- `No such host is known (kafka)` in IntelliJ
+- Kafka UI loading forever
+- Schema Registry container exiting immediately
+- Kafka messages showing as unreadable binary in Kafka UI
+- Avro object decoding not working properly
+
+These issues happened because the host machine and Docker containers needed different Kafka addresses:
+
+- `localhost:9092` for Spring Boot applications running on the host
+- `kafka:9093` for Docker containers like Kafka UI and Schema Registry
+
+---
+
+### 3) Final working PowerShell commands
+
+#### Step A: Create a Docker network
+```powershell
+docker network create kafka-net
+```
+If the network already exists, Docker will show an error. In that case, the existing network can be reused.
+
+#### Step B: Start Kafka
+```powershell
+docker rm -f kafka schema-registry kafka-ui
+
+docker run -d `
+--name kafka `
+--network kafka-net `
+-p 9092:9092 `
+-e KAFKA_NODE_ID=1 `
+-e KAFKA_PROCESS_ROLES=broker,controller `
+-e KAFKA_LISTENERS=PLAINTEXT://:9092,PLAINTEXT_INTERNAL://:9093,CONTROLLER://:9094 `
+-e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:9093 `
+-e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT `
+-e KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT_INTERNAL `
+-e KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER `
+-e KAFKA_CONTROLLER_QUORUM_VOTERS=1@kafka:9094 `
+-e KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1 `
+apache/kafka:4.1.2
+```
+This setup gives two working Kafka addresses:
+
+- `localhost:9092` for IntelliJ-hosted Spring Boot services
+- `kafka:9093` for Docker services
+
+#### Step C: Start Schema Registry
+```powershell
+docker run -d `
+--name schema-registry `
+--network kafka-net `
+-p 8081:8081 `
+-e SCHEMA_REGISTRY_HOST_NAME=schema-registry `
+-e SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS=PLAINTEXT://kafka:9093 `
+-e SCHEMA_REGISTRY_LISTENERS=http://0.0.0.0:8081 `
+confluentinc/cp-schema-registry
+```
+Schema Registry needed:
+
+- `SCHEMA_REGISTRY_HOST_NAME`
+- correct Kafka bootstrap server
+- correct listener binding
+
+Once this was fixed, port `8081` opened successfully.
+
+#### Step D: Start Kafka UI
+```powershell
+docker run -d `
+--name kafka-ui `
+--network kafka-net `
+-p 8080:8080 `
+-e KAFKA_CLUSTERS_0_NAME=local `
+-e KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9093 `
+-e KAFKA_CLUSTERS_0_SCHEMAREGISTRY=http://schema-registry:8081 `
+provectuslabs/kafka-ui
+```
+Kafka UI needs to know both:
+
+- where Kafka is
+- where Schema Registry is
+
+That is why the `KAFKA_CLUSTERS_0_SCHEMAREGISTRY` value is important.
+
+---
+
+### 4) Final Spring Boot configuration used by the project
+
+All Spring Boot services run on the host machine, so the Kafka bootstrap server remains:
+
+```yaml
+spring:
+  kafka:
+    bootstrap-servers: localhost:9092
+```
+
+The Avro settings point to Schema Registry:
+
+```yaml
+spring:
+  kafka:
+    properties:
+      schema.registry.url: http://localhost:8081
+```
+
+Producer uses:
+
+```yaml
+value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
+```
+
+Consumer uses:
+
+```yaml
+value-deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
+specific.avro.reader: true
+```
+
+---
+
+### 5) What was solved by Schema Registry
+
+Before Schema Registry:
+
+- events were harder to manage
+- message contract was not centralized
+- UI could not decode messages properly
+- consumer code was more fragile
+- version changes caused runtime issues
+
+After Schema Registry:
+
+- schema is centralized
+- Avro messages are strongly typed
+- producer and consumer follow the same contract
+- schema evolution is manageable
+- Kafka UI can decode Avro messages properly
+
+---
+
+### 6) How to verify the setup
+
+#### Check running containers
+```powershell
+docker ps
+```
+Expected containers:
+
+- kafka
+- schema-registry
+- kafka-ui
+
+#### Check Schema Registry subjects
+Open in browser:
+
+```text
+http://localhost:8081/subjects
+```
+If the producer has sent messages, this will show subjects like:
+
+```json
+["order_created-value", "order_status_updated-value"]
+```
+
+#### Check Kafka topics in Kafka UI
+Open:
+
+```text
+http://localhost:8080
+```
+Then open the topic `order_created` and select:
+
+- Key Serde: `String`
+- Value Serde: `Avro (Embedded)`
+
+---
+
+### 7) Useful troubleshooting commands
+
+#### Kafka logs
+```powershell
+docker logs kafka
+```
+
+#### Schema Registry logs
+```powershell
+docker logs schema-registry
+```
+
+#### Kafka UI logs
+```powershell
+docker logs kafka-ui
+```
+
+#### List topics from inside Kafka container
+```powershell
+docker exec -it kafka /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list
+```
+
+---
+
+### 8) Final summary of the issue and solution
+
+The main challenge was not the application code itself. The real issue was the runtime environment and network configuration.
+
+The solution was:
+
+- use dual Kafka listeners
+- use `localhost:9092` for IntelliJ services
+- use `kafka:9093` for Docker services
+- configure Schema Registry correctly
+- connect Kafka UI to both Kafka and Schema Registry
+- remove DevTools restart issues from the Spring Boot services
+
+That final setup made the whole e-commerce event flow stable:
+
+`Order Service -> Kafka -> Inventory Service -> Kafka -> Order Service -> Notification Service`
