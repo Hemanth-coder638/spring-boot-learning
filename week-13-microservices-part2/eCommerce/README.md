@@ -116,9 +116,9 @@ Client -> API Gateway -> Authentication Filter -> Authorization Filter -> Micros
 - Route allows: `USER, ADMIN, SUPER_ADMIN`
 - Request is allowed
 
-**Video Placeholder**
+**HomeWork1 ScreenRecord**
 
-<!-- Add working video here -->
+https://github.com/user-attachments/assets/f63ecca3-bf6c-426d-87f2-7072b1ddeb9e
 
 ---
 
@@ -134,9 +134,9 @@ API Gateway -> Order Service -> Inventory Service -> Shipping Service
 - One trace ID should appear in Zipkin for the full request flow
 - Each service should show its own span
 
-**Video Placeholder**
+**HomeWork2 ScreenRecord**
 
-<!-- Add working video here -->
+https://github.com/user-attachments/assets/82d50f82-9220-4c8a-bb93-3d076b06b70b
 
 ---
 
@@ -152,9 +152,9 @@ Spring Boot Apps -> Logstash -> Elasticsearch -> Kibana
 - Search logs by service name
 - View errors and request flow in Kibana Discover
 
-**Video Placeholder**
+**HomeWork3 ScreenRecord**
 
-<!-- Add working video here -->
+https://github.com/user-attachments/assets/0ee70551-a295-49c6-b340-07b2daef1b59
 
 ---
 
@@ -175,9 +175,9 @@ shipping-service.yml
 - Gateway routes go into `api-gateway.yml`
 - DB config goes into each service file
 
-**Video Placeholder**
+**HomeWork4 ScreenRecording**
 
-<!-- Add working video here -->
+https://github.com/user-attachments/assets/d70ce93d-0b12-4a7f-bca9-1d44e21d6c7b
 
 ---
 
@@ -198,7 +198,7 @@ By the end of Week 13, the eCommerce microservices system became more secure, co
 
 ---
 
-# ⚠️ Challenges Faced & Solutions (Real-World Debugging)
+# Challenges Faced & Solutions (Real-World Debugging)
 
 ### 1. Config Server Not Fetching from GitHub
 **Issue:** API Gateway failed to load config (`Unable to load config data`).  
@@ -294,7 +294,7 @@ docker logs logstash
 
 ---
 
-# 🚀 Key Takeaway
+# Key Takeaway
 
 Most failures were due to:
 - YAML indentation mistakes
