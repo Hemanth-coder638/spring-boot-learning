@@ -407,8 +407,8 @@ User can cancel only before shipping is confirmed. After shipping is confirmed, 
 This ensures that order cancellation is allowed only within the valid waiting window.
 
 ### HomeWork4 Screenshot placeholder
-*Order is Cancelled in below screenrecord Within shipping service that which moves that order to Shipping.
-*When order is Shipped we cant cancel that order in below scenario
+* Order is Cancelled in below screenrecord Within shipping service that which moves that order to Shipping.
+* When order is Shipped we cant cancel that order in below scenario
 
 https://github.com/user-attachments/assets/499fe8f5-cc6b-43ae-b939-4a46bbdffefb
 
