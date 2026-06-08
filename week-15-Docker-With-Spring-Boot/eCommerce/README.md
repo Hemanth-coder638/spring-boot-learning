@@ -1,4 +1,3 @@
-```markdown
 # 🛒 eCommerce Microservices Platform – Dockerized Spring Boot Architecture
 
 > Containerized microservices system (Orders/Inventory/Shipping) with centralized config (Config Server), service discovery (Eureka), API Gateway, databases, Zipkin tracing, and ELK logging.
@@ -61,7 +60,7 @@ This repository provides a **production-grade Docker** deployment of an eCommerc
    ```bash
    git clone <your-github-repo-url>
    cd eCommerce
-   ```
+   
 
 2. **Build application artifacts (optional):**
    ```bash
@@ -149,7 +148,9 @@ This project implements the Week-15 Docker & Docker Compose material:
   docker build -t my-java-app ./my-java-app
   docker images
   ```
-🎥 *[SCREEN RECORDING: Building Docker Images of Sample Java Apps]*
+🎥 *[SCREEN RECORDING: Building Docker Images of Sample Java Apps]
+
+https://github.com/user-attachments/assets/17ca0a91-4419-4f2a-9abc-7c3d0191d201
 
 ### Homework 2: Run Open-Source Docker Projects
 - **Task:** Pull and run existing Docker images from Docker Hub.
