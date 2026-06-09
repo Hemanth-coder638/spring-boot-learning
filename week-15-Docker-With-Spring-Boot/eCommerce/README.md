@@ -151,6 +151,114 @@ This project implements the Week-15 Docker & Docker Compose material:
 🎥 *[SCREEN RECORDING: Building Docker Images of Sample Java Apps]
 
 https://github.com/user-attachments/assets/17ca0a91-4419-4f2a-9abc-7c3d0191d201
+## Steps Performed
+
+## 1. Built the Spring Boot JAR
+
+``` bash
+mvn clean package -DskipTests
+```
+
+This generated the executable Spring Boot JAR file.
+
+## 2. Created Docker Image
+
+``` bash
+docker build -t banking-app .
+```
+
+A Docker image named `banking-app` was created from the project's
+Dockerfile.
+
+## 3. Created Docker Network
+
+``` bash
+docker network create banking-network
+```
+
+This network allows containers to communicate using container names.
+
+## 4. Started PostgreSQL Container
+
+``` bash
+docker run -d \
+--name postgres \
+--network banking-network \
+-e POSTGRES_DB=bankingdatabase \
+-e POSTGRES_USER=postgres \
+-e POSTGRES_PASSWORD=7878 \
+-p 5433:5432 \
+postgres:16
+```
+
+### PostgreSQL Port Mapping
+
+Host Machine: 5433\
+Container: 5432
+
+The Banking application connects to PostgreSQL through the Docker
+network using the container name `postgres`.
+
+## 5. Started Banking Application Container
+
+``` bash
+docker run -d \
+--name banking-container \
+--network banking-network \
+-p 1212:1212 \
+-e DB_URL=jdbc:postgresql://postgres:5432/bankingdatabase \
+-e DB_USERNAME=postgres \
+-e DB_PASSWORD=7878 \
+banking-app
+```
+
+### Banking Container Port Mapping
+
+Host Machine: 1212\
+Container: 1212
+
+The application becomes accessible through:
+
+``` text
+http://localhost:1212
+```
+
+# Container Communication
+
+``` text
+Banking Container
+        |
+        |
+        v
+PostgreSQL Container
+```
+
+The Banking container communicates with PostgreSQL using:
+
+``` text
+postgres:5432
+```
+
+where `postgres` is the PostgreSQL container name inside the Docker
+network.
+
+# Verification
+
+Commands used:
+
+``` bash
+docker ps
+docker logs banking-container
+docker logs postgres
+```
+
+Verification confirmed:
+
+-   PostgreSQL container running successfully.
+-   Banking application container running successfully.
+-   Application connected to PostgreSQL database.
+-   REST APIs tested successfully using Postman.
+
 
 ### Homework 2: Run Open-Source Docker Projects
 - **Task:** Pull and run existing Docker images from Docker Hub.
