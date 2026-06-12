@@ -138,7 +138,7 @@ This project implements the Week-15 Docker & Docker Compose material:
 
 ## 📝 Homework Implementations
 
-### Homework 1: Build Docker Images of Java Apps
+# Homework 1: Build Docker Images of Java Apps
 - **Task:** Create Docker images for Java (Spring Boot) applications.
 - **Approach:** Wrote a `Dockerfile` (as above) for each app. Ran `docker build -t myapp .` in the project directory.
 - **Verification:** Used `docker images` to list built images and `docker run myapp` to test.
@@ -153,7 +153,7 @@ This project implements the Week-15 Docker & Docker Compose material:
 https://github.com/user-attachments/assets/17ca0a91-4419-4f2a-9abc-7c3d0191d201
 ## Steps Performed
 
-## 1. Built the Spring Boot JAR
+### 1. Built the Spring Boot JAR
 
 ``` bash
 mvn clean package -DskipTests
@@ -161,7 +161,7 @@ mvn clean package -DskipTests
 
 This generated the executable Spring Boot JAR file.
 
-## 2. Created Docker Image
+### 2. Created Docker Image
 
 ``` bash
 docker build -t banking-app .
@@ -170,7 +170,7 @@ docker build -t banking-app .
 A Docker image named `banking-app` was created from the project's
 Dockerfile.
 
-## 3. Created Docker Network
+### 3. Created Docker Network
 
 ``` bash
 docker network create banking-network
@@ -178,7 +178,7 @@ docker network create banking-network
 
 This network allows containers to communicate using container names.
 
-## 4. Started PostgreSQL Container
+### 4. Started PostgreSQL Container
 
 ``` bash
 docker run -d \
@@ -199,7 +199,7 @@ Container: 5432
 The Banking application connects to PostgreSQL through the Docker
 network using the container name `postgres`.
 
-## 5. Started Banking Application Container
+### 5. Started Banking Application Container
 
 ``` bash
 docker run -d \
@@ -223,7 +223,7 @@ The application becomes accessible through:
 http://localhost:1212
 ```
 
-# Container Communication
+## Container Communication
 
 ``` text
 Banking Container
@@ -242,7 +242,7 @@ postgres:5432
 where `postgres` is the PostgreSQL container name inside the Docker
 network.
 
-# Verification
+## Verification
 
 Commands used:
 
@@ -260,7 +260,7 @@ Verification confirmed:
 -   REST APIs tested successfully using Postman.
 
 
-### Homework 2: Run Open-Source Docker Projects
+# Homework 2: Run Open-Source Docker Projects
 - **Task:** Pull and run existing Docker images from Docker Hub.
 - **Approach:** Used `docker pull` and `docker run`. For example, ran Nginx and PostgreSQL containers.
 - **Example:**
@@ -274,7 +274,38 @@ Verification confirmed:
 - **Outcome:** Images ran successfully from public repositories.
 🎥 *[SCREEN RECORDING: Pulling and Running Docker Hub Images]*
 
-### Homework 3: Dockerize Microservices Architecture
+https://github.com/user-attachments/assets/3d5aa7c1-745a-4d81-8fb5-f6331cf966ec
+## Objective
+
+Pull and run existing open-source Docker images from Docker Hub.
+
+## Steps Performed
+
+### 1. Pulled Nginx Image
+
+```bash
+docker pull nginx
+```
+
+Downloaded the official Nginx image from Docker Hub.
+
+### 2. Created Nginx Container
+```bash
+docker run -d --name nginx-container -p 8080:80 nginx
+```
+
+Port Mapping:
+
+Host Machine: 8080
+Container: 80
+
+Verified using:
+
+http://localhost:8080
+
+Nginx welcome page was displayed successfully.
+
+# Homework 3: Dockerize Microservices Architecture
 - **Task:** Containerize all Spring Boot microservices together.
 - **Approach:** Created a unified `docker-compose.yml` including:
   - discovery-service (Eureka), config-server, api-gateway, order-service, inventory-service, shipping-service
@@ -285,15 +316,75 @@ Verification confirmed:
   ```
   All services start and register with Eureka automatically.
 - **Verification:** Checked Eureka UI (`http://localhost:8761`) to see all services listed. Used `docker ps` to ensure containers are running.
+
 🎥 *[SCREEN RECORDING: Running Microservices via Docker Compose]*
 
-### Homework 4: Dockerize Kafka & ELK Stack
+https://github.com/user-attachments/assets/ede61cc5-9da5-4533-9b0f-1da293bc456d
+
+## Task
+Containerize multiple Spring Boot microservices together using Docker Compose.
+
+### Microservices Included
+
+- Discovery Service (Eureka)
+- Config Server
+- API Gateway
+- Order Service
+- Inventory Service
+- Shipping Service
+- PostgreSQL databases
+
+### Docker Compose Execution
+
+Created a unified docker-compose.yml file containing all services.
+
+Command used:
+
+```bash
+docker compose up -d
+```
+
+-Docker Compose automatically created containers, networks, and started all microservices.
+
+## 1.Container Communication
+
+- All containers communicate through:
+ecommerce-network
+Services communicate using container names.
+Example:
+
+order-service
+      |
+      |
+postgres-order:5432
+## 2.Verification
+
+Checked running containers:
+
+docker ps
+
+Checked service logs:
+
+- docker logs order-service
+- docker logs discovery-service
+
+Verified Eureka Dashboard:
+
+http://localhost:8761
+
+All microservices were registered successfully.
+
+## 3.Result
+
+Successfully containerized a complete Spring Boot microservices architecture using Docker Compose with service discovery, configuration management, database containers, and inter-container communication.
+
+# Homework 4: Dockerize Kafka & ELK Stack
 - **Task:** Integrate a Kafka broker and the ELK logging stack into the Docker setup.
 - **Approach:** Added Kafka (broker + Zookeeper) and ELK services to `docker-compose.yml`. Configured services to send logs to Logstash and traces to Zipkin.
 - **Result:** `docker compose up` now brings up Kafka, Elasticsearch, Logstash, Kibana alongside the microservices. Verified in Kibana that logs from the services are collected.
 🎥 *[SCREEN RECORDING: Starting ELK (and Kafka) Stack and Demonstrating Kibana]*
 
-### Homework 5: Orchestrate with Docker Compose
+# Homework 5: Orchestrate with Docker Compose
 - **Task:** Deploy the entire application ecosystem with one command.
 - **Approach:** The existing `docker-compose.yml` defines all components. Running:
   ```bash
