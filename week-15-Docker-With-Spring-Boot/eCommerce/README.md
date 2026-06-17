@@ -384,6 +384,100 @@ Successfully containerized a complete Spring Boot microservices architecture usi
 - **Result:** `docker compose up` now brings up Kafka, Elasticsearch, Logstash, Kibana alongside the microservices. Verified in Kibana that logs from the services are collected.
 🎥 *[SCREEN RECORDING: Starting ELK (and Kafka) Stack and Demonstrating Kibana]*
 
+https://github.com/user-attachments/assets/0a6d63f4-72a5-40b6-aa18-873dfa97f46a
+
+## Task
+Integrate Kafka messaging service and ELK logging stack into the existing microservices Docker environment.
+
+## Components Added
+
+The Docker Compose configuration was extended with:
+
+- Apache Kafka (Message Broker)
+- Zookeeper (Kafka dependency)
+- Elasticsearch (Log storage)
+- Logstash (Log processing pipeline)
+- Kibana (Log visualization)
+- Zipkin (Distributed tracing)
+
+## Docker Compose Execution
+
+Used the command:
+
+```bash
+docker compose up -d
+```
+Docker Compose started all required services together with existing Spring Boot microservices.
+
+Kafka Integration
+
+Kafka works as a messaging queue between services.
+
+Architecture:
+
+Microservice
+      |
+      |
+      v
+   Kafka Broker
+      |
+      |
+      v
+ Consumer Service
+
+Kafka provides asynchronous communication between microservices.
+
+### ELK Stack Flow
+Application logs are collected and processed through:
+
+Spring Boot Services
+          |
+          v
+       Logstash
+          |
+          v
+    Elasticsearch
+          |
+          v
+        Kibana
+
+- Logstash receives logs from services and stores them in Elasticsearch.
+- Kibana provides a dashboard to search and visualize application logs.
+### Verification
+
+Checked running containers using:
+```bash
+docker ps
+```
+
+### Verified services:
+
+- Kafka container running
+- Zookeeper container running
+- Elasticsearch running
+- Logstash running
+- Kibana running
+- Zipkin running
+
+### Checked logs using:
+```bash
+docker logs logstash
+docker logs elasticsearch
+```
+
+### Opened Kibana dashboard:
+
+http://localhost:5601
+
+Verified that application logs are available through the ELK stack.
+
+Zipkin tracing dashboard:
+
+http://localhost:9411
+Result
+
+Successfully integrated Kafka messaging and ELK logging stack into the Dockerized Spring Boot microservices architecture.
+
 # Homework 5: Orchestrate with Docker Compose
 - **Task:** Deploy the entire application ecosystem with one command.
 - **Approach:** The existing `docker-compose.yml` defines all components. Running:
