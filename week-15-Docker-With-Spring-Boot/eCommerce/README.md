@@ -526,12 +526,16 @@ The entire ecosystem can now be started with a single command, making the applic
 
 ## 📸 Demonstration Screenshots
 
-> 📷 *Docker Desktop (containers view)*: All microservice and infrastructure containers running.  
-> 📷 *Eureka Dashboard* at `http://localhost:8761`: Services registered and healthy.  
-> 📷 *Zipkin Tracing UI*: Sample distributed trace for a request.  
-> 📷 *Kibana Dashboard*: Logs from services (filter/search for specific log entries).  
-> 📷 *Postman – Order API*: Creating a new order via the API Gateway (HTTP POST).  
-
+> 📷 *Docker Desktop (containers view)*: All microservice and infrastructure containers running.
+> <img width="960" height="540" alt="docker" src="https://github.com/user-attachments/assets/73630435-f8cb-4f66-ae1a-1baa4d137cc4" />
+> 📷 *Eureka Dashboard* at `http://localhost:8761`: Services registered and healthy.
+> <img width="960" height="540" alt="eureka" src="https://github.com/user-attachments/assets/792e795c-664c-49d3-9f8a-fef32a895873" />
+> 📷 *Zipkin Tracing UI*: Sample distributed trace for a request.
+> <img width="960" height="540" alt="zipkin" src="https://github.com/user-attachments/assets/f6a75846-8742-4861-b806-8dc63814dc38" />
+> 📷 *Kibana Dashboard*: Logs from services (filter/search for specific log entries).
+> <img width="960" height="540" alt="kibana" src="https://github.com/user-attachments/assets/7e18036d-735b-477a-9069-2179427976f6" />
+> 📷 *Postman – Order API*: Creating a new order via the API Gateway (HTTP POST).
+> <img width="960" height="540" alt="postman" src="https://github.com/user-attachments/assets/0356529d-1f3a-48c3-b462-6cc0f88b301d" />
 *(Add actual screenshots in place of these placeholders.)*
 
 ---
