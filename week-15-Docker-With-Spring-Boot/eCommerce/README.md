@@ -154,7 +154,6 @@ https://github.com/user-attachments/assets/17ca0a91-4419-4f2a-9abc-7c3d0191d201
 ## Steps Performed
 
 ### 1. Built the Spring Boot JAR
-
 ``` bash
 mvn clean package -DskipTests
 ```
@@ -162,7 +161,6 @@ mvn clean package -DskipTests
 This generated the executable Spring Boot JAR file.
 
 ### 2. Created Docker Image
-
 ``` bash
 docker build -t banking-app .
 ```
@@ -175,7 +173,6 @@ Dockerfile.
 ``` bash
 docker network create banking-network
 ```
-
 This network allows containers to communicate using container names.
 
 ### 4. Started PostgreSQL Container
@@ -200,7 +197,6 @@ The Banking application connects to PostgreSQL through the Docker
 network using the container name `postgres`.
 
 ### 5. Started Banking Application Container
-
 ``` bash
 docker run -d \
 --name banking-container \
@@ -234,24 +230,18 @@ PostgreSQL Container
 ```
 
 The Banking container communicates with PostgreSQL using:
-
 ``` text
 postgres:5432
 ```
-
 where `postgres` is the PostgreSQL container name inside the Docker
 network.
-
 ## Verification
-
 Commands used:
-
 ``` bash
 docker ps
 docker logs banking-container
 docker logs postgres
 ```
-
 Verification confirmed:
 
 -   PostgreSQL container running successfully.
@@ -282,27 +272,21 @@ Pull and run existing open-source Docker images from Docker Hub.
 ## Steps Performed
 
 ### 1. Pulled Nginx Image
-
 ```bash
 docker pull nginx
 ```
 
 Downloaded the official Nginx image from Docker Hub.
-
 ### 2. Created Nginx Container
 ```bash
 docker run -d --name nginx-container -p 8080:80 nginx
 ```
 
 Port Mapping:
-
 Host Machine: 8080
 Container: 80
-
 Verified using:
-
 http://localhost:8080
-
 Nginx welcome page was displayed successfully.
 
 # Homework 3: Dockerize Microservices Architecture
@@ -401,7 +385,6 @@ The Docker Compose configuration was extended with:
 - Zipkin (Distributed tracing)
 
 ## Docker Compose Execution
-
 Used the command:
 
 ```bash
@@ -424,7 +407,6 @@ Microservice
       |
       v
  Consumer Service
-
 Kafka provides asynchronous communication between microservices.
 
 ### ELK Stack Flow
@@ -490,6 +472,56 @@ Successfully integrated Kafka messaging and ELK logging stack into the Dockerize
   - Verified the order was created (e.g., via database or subsequent GET).
 🎥 *[SCREEN RECORDING: Full System Startup and Order Creation Demo]*
 
+https://github.com/user-attachments/assets/2e72499c-991f-473f-b572-952be616d60b
+### Task
+Deploy the complete microservices ecosystem using Docker Compose with a single command.
+
+## Implementation
+The existing `docker-compose.yml` file was used to orchestrate all application components together.
+The Docker Compose configuration includes:
+
+- Discovery Service (Eureka Server)
+- Config Server
+- API Gateway
+- Order Service
+- Inventory Service
+- Shipping Service
+- PostgreSQL databases
+- Elasticsearch
+- Logstash
+- Kibana
+- Zipkin
+
+### Execution
+Started the complete application stack using:
+
+```bash
+docker compose up -d
+```
+Docker Compose automatically created and started all required containers with the configured networks, ports, and dependencies.
+### Verification
+Verified the running containers using:
+```
+docker ps
+```
+- Checked that all microservices were running successfully.
+### The application flow was tested through the API Gateway:
+
+Client
+  |
+  v
+API Gateway
+  |
+  +--> Order Service
+  |
+  +--> Inventory Service
+  |
+  +--> Shipping Service
+A REST API request was sent through the gateway and the order creation flow was verified successfully.
+
+### Result
+Successfully deployed and orchestrated the complete microservices platform using Docker Compose.
+The entire ecosystem can now be started with a single command, making the application easier to run, manage, and share.
 ---
 
 ## 📸 Demonstration Screenshots
