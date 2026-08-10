@@ -1,7 +1,7 @@
 # Kafka and Schema Registry Tutorial (Week 14 Deep Dive)
 
 ## Introduction to Apache Kafka  
-Apache Kafka is a **distributed streaming platform** designed for high-throughput, fault-tolerant, real-time data pipelines【17†L195-L203】【19†L49-L54】.  Conceptually it acts like a publish-subscribe message queue, but with a **durable commit-log** design that can handle millions of events per second.  In Kafka, an *event record* (or “message”) is the unit of data: it consists of a timestamp, an optional key, a value (payload), and optional headers【7†L148-L156】. For example, a log event or an order update would be produced with a key (e.g. order ID) and a JSON or Avro **value**.  
+Apache Kafka is a **distributed streaming platform** designed for high-throughput, fault-tolerant, real-time data pipelines.  Conceptually it acts like a publish-subscribe message queue, but with a **durable commit-log** design that can handle millions of events per second.  In Kafka, an *event record* (or “message”) is the unit of data: it consists of a timestamp, an optional key, a value (payload), and optional headers【7†L148-L156】. For example, a log event or an order update would be produced with a key (e.g. order ID) and a JSON or Avro **value**.  
 
 【46†embed_image】 *Figure: A Kafka event record consists of a timestamp, key, value, and optional headers【7†L148-L156】.*  
 
