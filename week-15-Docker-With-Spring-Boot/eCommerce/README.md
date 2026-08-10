@@ -45,13 +45,6 @@ This repository provides a **production-grade Docker** deployment of an eCommerc
 
 ---
 
-## 🔗 Architecture
-
-> 📷 **Architecture Diagram:** [Insert diagram of the microservices architecture here]  
-> *(Shows how API Gateway, Discovery, Config, services, DBs, Zipkin, and ELK connect.)*
-
----
-
 ## 🚀 Getting Started
 
 **Prerequisites:** Java 21, Maven, and Docker Desktop (with WSL2 on Windows) installed. Verify Docker is running (`docker --version`).
