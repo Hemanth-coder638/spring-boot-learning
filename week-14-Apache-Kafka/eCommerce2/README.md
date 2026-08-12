@@ -16,10 +16,10 @@ Consumers in Kafka form **consumer groups**. Each consumer group has a unique ID
 
 *Figure: A single Kafka partition (0) with sequential offsets. Producers append new records (e.g. offsets 10, 11, 12), and two consumers in a group read independently at different offset.*  
 
-In summary, Kafka’s architecture provides horizontal scalability and fault tolerance by distributing data across brokers and partitions, while ensuring ordered, durable logging of all events【23†L312-L319】【10†L164-L172】.  Adding more brokers or partitions scales capacity; replication and leader election ensure resilience【. 
+In summary, Kafka’s architecture provides horizontal scalability and fault tolerance by distributing data across brokers and partitions, while ensuring ordered, durable logging of all events.  Adding more brokers or partitions scales capacity; replication and leader election ensure resilience【. 
 
 ## Installing Kafka and Visualization Tools  
-Installing Kafka usually involves downloading the Apache Kafka binaries from the official website and starting the required services.  Historically Kafka required a separate ZooKeeper ensemble for cluster metadata, though modern versions support **KRaft** mode (Kafka’s built-in consensus) without ZooKeeper【23†L369-L378】【23†L383-L392】.  The typical steps are:
+Installing Kafka usually involves downloading the Apache Kafka binaries from the official website and starting the required services.  Historically Kafka required a separate ZooKeeper ensemble for cluster metadata, though modern versions support **KRaft** mode (Kafka’s built-in consensus) without ZooKeeper.  The typical steps are:
 
 1. **Download Kafka** from [kafka.apache.org](https://kafka.apache.org/downloads) (or use a package manager like Homebrew, apt, etc.).
 2. **Start ZooKeeper (if needed):** `bin/zookeeper-server-start.sh config/zookeeper.properties`.  
@@ -63,9 +63,9 @@ When sending complex messages (e.g. events with structured payloads), it’s bes
 
 The workflow is typically: define your message schema (e.g. an Avro `.avsc` file with fields for `orderId`, `items`, etc.), then register it with the Schema Registry (via REST API or automatically). In Spring Boot, you would use the `KafkaAvroSerializer`/`KafkaAvroDeserializer` and point them to the registry URL (e.g. `http://localhost:8081`). Under the hood, Confluent’s Avro serializer prepends a small *schema ID* to each message payload. The consumer’s deserializer reads that ID, fetches the schema from the registry if needed, and then deserializes the Avro bytes back into the native class. 
 
-【8†embed_image】 *Figure: Confluent’s Avro binary message format. Each record’s value begins with a 1-byte “magic” (always 0) and a 4-byte schema ID that points to the Avro schema in Schema Registry, followed by the serialized data payload. This lets producers and consumers efficiently agree on message schemas【13†L781-L789】【13†L865-L873】.*  
+【8†embed_image】 *Figure: Confluent’s Avro binary message format. Each record’s value begins with a 1-byte “magic” (always 0) and a 4-byte schema ID that points to the Avro schema in Schema Registry, followed by the serialized data payload. This lets producers and consumers efficiently agree on message schemas.*  
 
-Using Schema Registry has several advantages. It enables **compatibility checks and versioning**: you can define backward/forward compatibility rules so that evolving your schemas doesn’t break old consumers【13†L846-L855】. For example, you can add new fields with defaults, and Schema Registry will allow the change without corrupting data or requiring costly migrations. It also optimizes wire payloads: instead of sending the full schema with each message, only a tiny 4-byte schema ID is sent【13†L865-L873】, saving network and storage.  Crucially, Schema Registry provides **data governance** – ensuring all services agree on the data contract. As Confluent notes, this “helps to ensure data quality, adherence to standards… and reduces the risk of data compatibility issues, data corruption, and data loss”【13†L846-L855】. 
+Using Schema Registry has several advantages. It enables **compatibility checks and versioning**: you can define backward/forward compatibility rules so that evolving your schemas doesn’t break old consumers. For example, you can add new fields with defaults, and Schema Registry will allow the change without corrupting data or requiring costly migrations. It also optimizes wire payloads: instead of sending the full schema with each message, only a tiny 4-byte schema ID is sent, saving network and storage.  Crucially, Schema Registry provides **data governance** – ensuring all services agree on the data contract. As Confluent notes, this “helps to ensure data quality, adherence to standards… and reduces the risk of data compatibility issues, data corruption, and data loss”. 
 
 In practice, you’d configure your Spring Boot services like:  
 
@@ -200,7 +200,7 @@ This service is very lightweight – it could simply write to a log or notify an
 
 Each of these challenges was addressed through configuration changes and code tweaks, as illustrated in our screen recordings. The final solution achieves a stable, schema-validated Kafka pipeline. 
 
-**References:** We relied on official Kafka and Confluent documentation for definitions and best practices【17†L195-L203】【13†L781-L789】【23†L310-L319】, as well as community tutorials and blog posts on Kafka architecture and Spring Boot integration【19†L49-L54】【40†L30-L33】【42†L66-L73】. These sources guided our design of an event-driven, schema-governed microservices system.
+**References:** We relied on official Kafka and Confluent documentation for definitions and best practices, as well as community tutorials and blog posts on Kafka architecture and Spring Boot integration. These sources guided our design of an event-driven, schema-governed microservices system.
 
 
 ## Docker Setup, Problems Faced, and Final Kafka + Schema Registry Configuration
