@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: banking-hw4
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: banking-hw4
+
+  template:
+    metadata:
+      labels:
+        app: banking-hw4
+
+    spec:
+      containers:
+        - name: banking
+          image: banking-app:1.1
+
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - containerPort: 1212
+
+          env:
+            - name: DB_URL
+              value: "jdbc:postgresql://postgres-hw4-0.postgres-hw4-headless:5432/bankingdatabase"
+
+            - name: DB_USERNAME
+              value: "postgres"
+
+            - name: DB_PASSWORD
+              value: "7878"

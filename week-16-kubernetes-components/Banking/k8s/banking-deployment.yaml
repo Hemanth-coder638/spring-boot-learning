@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: banking
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: banking
+
+  template:
+    metadata:
+      labels:
+        app: banking
+
+    spec:
+      containers:
+        - name: banking
+          image: banking-app:1.1
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - containerPort: 1212
+
+          env:
+            - name: DB_URL
+              value: jdbc:postgresql://postgres:5432/bankingdatabase
+
+            - name: DB_USERNAME
+              value: postgres
+
+            - name: DB_PASSWORD
+              value: "7878"
