@@ -2507,6 +2507,7 @@ Through this homework, I learned how a real backend application can be deployed 
 # Homework 4: StatefulSet with Headless Service
 ## Homework 4 ScreenRecord
 
+https://github.com/user-attachments/assets/5aa256c0-eb86-42be-a508-c44fe466c6ad
 
 ## Homework Statement
 
