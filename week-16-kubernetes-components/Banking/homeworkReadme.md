@@ -1,1 +1,1912 @@
-hello
+# Homework 1 — Deploy a Simple Web Application using Kubernetes and Minikube
+## Homework 1 ScreenRecord
+
+https://github.com/user-attachments/assets/c48db050-e9de-4459-b8d2-2119d29675d7
+
+## 1. Objective
+
+The objective of this homework is to deploy a simple web application using **Nginx** on a local Kubernetes cluster created with **Minikube**.
+
+In this practical, we will:
+
+* Create a Kubernetes Deployment for Nginx.
+* Understand how a Deployment creates and manages a ReplicaSet.
+* Understand how a ReplicaSet creates and maintains Pods.
+* Expose the Nginx application using a Kubernetes Service.
+* Access the Nginx application from the host machine.
+* Scale the application from 1 replica to 3 replicas.
+* Verify that the Service can route traffic to all 3 replicas.
+* Demonstrate Kubernetes self-healing by deleting a Pod and observing Kubernetes automatically create a replacement.
+
+---
+
+# 2. Technologies Used
+
+| Technology | Purpose                                                |
+| ---------- | ------------------------------------------------------ |
+| Kubernetes | Container orchestration platform                       |
+| Minikube   | Runs a local Kubernetes cluster                        |
+| Docker     | Container runtime used by Minikube                     |
+| kubectl    | Command-line tool used to communicate with Kubernetes  |
+| Nginx      | Sample web application                                 |
+| NodePort   | Exposes the application outside the Kubernetes cluster |
+
+---
+
+# 3. What is Kubernetes?
+
+**Kubernetes** is an open-source container orchestration platform used to deploy, manage, scale, and maintain containerized applications.
+
+Instead of manually managing containers, Kubernetes allows us to define the desired state of an application.
+
+For example, if we tell Kubernetes:
+
+```text
+I need 3 Nginx Pods
+```
+
+Kubernetes continuously tries to maintain:
+
+```text
+Desired state = 3 Pods
+Actual state  = 3 Pods
+```
+
+If one Pod crashes or is deleted:
+
+```text
+Desired = 3
+Actual  = 2
+```
+
+Kubernetes detects the difference and creates another Pod.
+
+This is one of the most important concepts of Kubernetes:
+
+> **Kubernetes continuously works to make the actual state match the desired state.**
+
+---
+
+# 4. What is Minikube?
+
+**Minikube** is a tool that allows us to run a Kubernetes cluster locally on a computer.
+
+Normally, a Kubernetes cluster may contain multiple physical or virtual machines. For learning and development, creating such infrastructure would be unnecessary.
+
+Minikube allows us to run a Kubernetes cluster on our local machine.
+
+In this project, the architecture is:
+
+```text
+Windows Computer
+       |
+       v
+Docker Desktop
+       |
+       v
+Minikube
+       |
+       v
+Kubernetes Cluster
+       |
+       v
+Nginx Application
+```
+
+In our environment, Minikube is running Kubernetes using the Docker driver.
+
+---
+
+# 5. What is a Kubernetes Node?
+
+A **Node** is a machine that runs Kubernetes workloads.
+
+A Node can be:
+
+* A physical machine
+* A virtual machine
+* A local machine running a Kubernetes environment
+
+In our Minikube setup, we have one Kubernetes Node:
+
+```text
+minikube
+```
+
+We verified it using:
+
+```bash
+kubectl get nodes
+```
+
+The Node was shown as:
+
+```text
+NAME       STATUS   ROLES           VERSION
+minikube   Ready    control-plane   v1.35.1
+```
+
+The important status is:
+
+```text
+Ready
+```
+
+This means the Node is available to run workloads.
+
+---
+
+# 6. Kubernetes Cluster Architecture
+
+Our local Kubernetes environment can be represented as:
+
+```text
++------------------------------------------------------+
+|                Windows Computer                      |
+|                                                      |
+|  +------------------------------------------------+  |
+|  |              Docker Desktop                    |  |
+|  |                                                |  |
+|  |  +--------------------------------------------+|  |
+|  |  |             Minikube Cluster               ||  |
+|  |  |                                            ||  |
+|  |  |  +--------------------------------------+  ||  |
+|  |  |  |          Kubernetes Node            |  ||  |
+|  |  |  |            "minikube"               |  ||  |
+|  |  |  |                                    |  ||  |
+|  |  |  |   Kubernetes Components            |  ||  |
+|  |  |  |                                    |  ||  |
+|  |  |  |   Deployment                       |  ||  |
+|  |  |  |       |                            |  ||  |
+|  |  |  |       v                            |  ||  |
+|  |  |  |   ReplicaSet                       |  ||  |
+|  |  |  |       |                            |  ||  |
+|  |  |  |       +---- Pod 1                  |  ||  |
+|  |  |  |       +---- Pod 2                  |  ||  |
+|  |  |  |       +---- Pod 3                  |  ||  |
+|  |  |  |                                    |  ||  |
+|  |  |  +--------------------------------------+  ||  |
+|  |  +--------------------------------------------+|  |
+|  +------------------------------------------------+  |
++------------------------------------------------------+
+```
+
+---
+
+# 7. What is a Pod?
+
+A **Pod** is the smallest deployable unit in Kubernetes.
+
+A Pod usually contains one or more containers.
+
+In our application, each Pod contains one Nginx container.
+
+For example:
+
+```text
+Pod
++-----------------------------+
+|                             |
+|      Nginx Container        |
+|                             |
+|      Nginx Web Server       |
+|                             |
++-----------------------------+
+```
+
+We created our first Pod indirectly through the Deployment.
+
+We did not manually create the Pod.
+
+Instead, we created:
+
+```text
+Deployment
+    |
+    v
+ReplicaSet
+    |
+    v
+Pod
+    |
+    v
+Nginx Container
+```
+
+This is an important Kubernetes principle:
+
+> Normally, applications are managed through higher-level Kubernetes objects such as Deployments rather than manually creating individual Pods.
+
+---
+
+# 8. Why do we need Pods?
+
+Containers need an environment in which Kubernetes can manage them.
+
+Pods provide Kubernetes with a unit for:
+
+* Running containers
+* Networking
+* Storage
+* Resource management
+* Health management
+
+In our example, each Nginx Pod runs the Nginx web server.
+
+If we have three Pods:
+
+```text
+Pod 1 → Nginx
+Pod 2 → Nginx
+Pod 3 → Nginx
+```
+
+we have three instances of our Nginx application.
+
+---
+
+# 9. What is a ReplicaSet?
+
+A **ReplicaSet** ensures that a specified number of identical Pods are running.
+
+For example:
+
+```text
+Desired replicas = 3
+```
+
+The ReplicaSet continuously tries to maintain:
+
+```text
+3 Running Pods
+```
+
+If one Pod is deleted:
+
+```text
+Before:
+
+Pod 1
+Pod 2
+Pod 3
+
+        ↓
+
+Pod 2 deleted
+
+        ↓
+
+Pod 1
+Pod 3
+```
+
+The ReplicaSet detects that only two Pods are running.
+
+It then creates another Pod:
+
+```text
+Pod 1
+Pod 3
+Pod 4
+```
+
+Therefore:
+
+```text
+Desired = 3
+Actual  = 3
+```
+
+---
+
+# 10. Why don't we normally create ReplicaSets manually?
+
+A Deployment automatically creates and manages a ReplicaSet.
+
+Therefore, our architecture is:
+
+```text
+Deployment
+     |
+     v
+ReplicaSet
+     |
+     +-------- Pod
+     |
+     +-------- Pod
+     |
+     +-------- Pod
+```
+
+The Deployment provides higher-level management such as:
+
+* Scaling
+* Rolling updates
+* Rollbacks
+* Managing ReplicaSets
+
+The ReplicaSet focuses primarily on maintaining the required number of Pods.
+
+---
+
+# 11. What is a Deployment?
+
+A **Deployment** is a Kubernetes object used to manage applications that usually run as stateless Pods.
+
+Instead of manually creating Pods, we tell Kubernetes what application we want and how many replicas we need.
+
+For this homework, we created:
+
+```text
+nginx-deployment
+```
+
+using:
+
+```bash
+kubectl create deployment nginx-deployment --image=nginx
+```
+
+This command tells Kubernetes:
+
+```text
+Application name = nginx-deployment
+Container image  = nginx
+```
+
+Kubernetes then creates the required resources.
+
+---
+
+# 12. Deployment → ReplicaSet → Pod
+
+The relationship can be represented as:
+
+```text
+                  Deployment
+                       |
+                       |
+                       v
+                 ReplicaSet
+                       |
+          +------------+------------+
+          |            |            |
+          v            v            v
+        Pod 1        Pod 2        Pod 3
+          |            |            |
+          v            v            v
+        Nginx        Nginx        Nginx
+       Container    Container    Container
+```
+
+This is one of the most important diagrams to understand for Kubernetes.
+
+---
+
+# 13. Creating the Nginx Deployment
+
+We created the Deployment using:
+
+```bash
+kubectl create deployment nginx-deployment --image=nginx
+```
+
+The `--image=nginx` option tells Kubernetes to use the official Nginx container image.
+
+After creation, we verified the Deployment:
+
+```bash
+kubectl get deployments
+```
+
+We also checked the Pods:
+
+```bash
+kubectl get pods
+```
+
+And the ReplicaSet:
+
+```bash
+kubectl get rs
+```
+
+The initial architecture was:
+
+```text
+Deployment
+     |
+     v
+ReplicaSet
+     |
+     v
+1 Nginx Pod
+```
+
+---
+
+# 14. What is a Kubernetes Service?
+
+Pods are temporary.
+
+A Pod can be deleted and recreated, and a replacement Pod can receive a different IP address.
+
+Therefore, applications should not depend directly on individual Pod IP addresses.
+
+A **Service** provides a stable network endpoint for accessing a group of Pods.
+
+Our architecture is:
+
+```text
+Client
+  |
+  v
+Service
+  |
+  +-------- Pod 1
+  |
+  +-------- Pod 2
+  |
+  +-------- Pod 3
+```
+
+The Service selects the appropriate Pods using labels.
+
+---
+
+# 15. Why do we need a Service for Nginx?
+
+Our Nginx Pods run inside the Kubernetes cluster.
+
+If we only have Pods:
+
+```text
+Nginx Pod
+10.244.x.x
+```
+
+that does not provide a convenient stable way for our Windows browser to access the application.
+
+We therefore created a Service:
+
+```bash
+kubectl expose deployment nginx-deployment --type=NodePort --port=80
+```
+
+The Service provides a stable access point for the Nginx application.
+
+---
+
+# 16. What is NodePort?
+
+A **NodePort** Service exposes an application through a port on the Kubernetes Node.
+
+Our Service was created with:
+
+```text
+Service port = 80
+NodePort     = 30279
+```
+
+We verified this using:
+
+```bash
+kubectl get services
+```
+
+The result contained:
+
+```text
+80:30279/TCP
+```
+
+This means:
+
+```text
+Port 80
+    |
+    v
+Nginx Service
+    |
+    v
+NodePort 30279
+```
+
+---
+
+# 17. Accessing Nginx from the Host Machine
+
+We used:
+
+```bash
+minikube service nginx-deployment
+```
+
+Minikube provided a URL and opened the application in the browser.
+
+The browser displayed:
+
+```text
+Welcome to nginx!
+```
+
+Therefore, the complete traffic flow was:
+
+```text
+Windows Browser
+       |
+       v
+Minikube Node
+       |
+       v
+NodePort :30279
+       |
+       v
+Nginx Service
+       |
+       v
+Nginx Pod
+       |
+       v
+Nginx Container
+       |
+       v
+Nginx Web Page
+```
+
+---
+
+# 18. Scaling the Deployment
+
+Initially, our Deployment had one replica.
+
+We scaled it to three replicas using:
+
+```bash
+kubectl scale deployment nginx-deployment --replicas=3
+```
+
+After scaling, we verified:
+
+```bash
+kubectl get deployments
+```
+
+The Deployment showed:
+
+```text
+READY   UP-TO-DATE   AVAILABLE
+3/3     3            3
+```
+
+This means all three desired replicas were running and available.
+
+---
+
+# 19. Three Nginx Pods
+
+After scaling, Kubernetes created three Pods.
+
+Conceptually:
+
+```text
+                    nginx-deployment
+                           |
+                           v
+                      ReplicaSet
+                           |
+             +-------------+-------------+
+             |             |             |
+             v             v             v
+          Pod 1         Pod 2         Pod 3
+          Nginx         Nginx         Nginx
+```
+
+We verified the Pods using:
+
+```bash
+kubectl get pods
+```
+
+All three Pods showed:
+
+```text
+1/1 Running
+```
+
+---
+
+# 20. How Kubernetes maintains 3 replicas
+
+Suppose our desired number of replicas is:
+
+```text
+3
+```
+
+Kubernetes continuously compares:
+
+```text
+Desired State
+     vs
+Actual State
+```
+
+For example:
+
+```text
+Desired = 3
+Actual  = 3
+```
+
+Everything is healthy.
+
+If one Pod is deleted:
+
+```text
+Desired = 3
+Actual  = 2
+```
+
+Kubernetes detects the difference.
+
+The ReplicaSet creates a replacement:
+
+```text
+Desired = 3
+Actual  = 3
+```
+
+This is called **self-healing**.
+
+---
+
+# 21. Self-Healing Demonstration
+
+We tested Kubernetes self-healing by deleting one Nginx Pod.
+
+For example:
+
+```bash
+kubectl delete pod <pod-name>
+```
+
+After deleting the Pod, Kubernetes automatically created a replacement Pod.
+
+We verified this using:
+
+```bash
+kubectl get pods
+```
+
+Eventually, the number of running Pods returned to:
+
+```text
+3
+```
+
+This demonstrates that Kubernetes does not simply run containers.
+
+It continuously manages the desired state of the application.
+
+---
+
+# 22. Service Connecting to Three Pods
+
+After scaling, the Service had three endpoints.
+
+We verified this using:
+
+```bash
+kubectl get endpoints nginx-deployment
+```
+
+The result showed three Pod IP addresses:
+
+```text
+10.244.0.3:80
+10.244.0.4:80
+10.244.0.5:80
+```
+
+The exact IP addresses can differ between environments.
+
+The important point is that the Service had three backend endpoints.
+
+The architecture therefore became:
+
+```text
+                    Nginx Service
+                         |
+          +--------------+--------------+
+          |              |              |
+          v              v              v
+      Pod 1           Pod 2           Pod 3
+   10.244.0.3      10.244.0.4      10.244.0.5
+       :80             :80             :80
+```
+
+---
+
+# 23. Complete Homework Architecture
+
+The complete application architecture is:
+
+```text
+                         USER
+                          |
+                          |
+                    Windows Browser
+                          |
+                          v
+                  Minikube Service
+                          |
+                    NodePort :30279
+                          |
+                          v
+              +-----------------------+
+              |   Nginx Service       |
+              |   ClusterIP           |
+              +-----------+-----------+
+                          |
+             Selects Pods using labels
+                          |
+          +---------------+---------------+
+          |               |               |
+          v               v               v
+      +-------+       +-------+       +-------+
+      | Pod 1 |       | Pod 2 |       | Pod 3 |
+      | Nginx |       | Nginx |       | Nginx |
+      +-------+       +-------+       +-------+
+          ^               ^               ^
+          |               |               |
+          +---------------+---------------+
+                          |
+                     ReplicaSet
+                          ^
+                          |
+                     Deployment
+                          ^
+                          |
+                    Kubernetes
+                          ^
+                          |
+                       Minikube
+                          ^
+                          |
+                     Docker Desktop
+                          ^
+                          |
+                    Windows Machine
+```
+
+---
+
+# 24. Complete Kubernetes Flow
+
+The complete process can be summarized as:
+
+```text
+1. Start Minikube
+       |
+       v
+2. Kubernetes Cluster starts
+       |
+       v
+3. Create Deployment
+       |
+       v
+4. Deployment creates ReplicaSet
+       |
+       v
+5. ReplicaSet creates Pod
+       |
+       v
+6. Pod runs Nginx container
+       |
+       v
+7. Create NodePort Service
+       |
+       v
+8. Service provides stable access
+       |
+       v
+9. Access Nginx from browser
+       |
+       v
+10. Scale Deployment to 3 replicas
+       |
+       v
+11. ReplicaSet maintains 3 Pods
+       |
+       v
+12. Delete one Pod
+       |
+       v
+13. ReplicaSet creates replacement Pod
+       |
+       v
+14. Application returns to 3 replicas
+```
+
+---
+
+# 25. Commands Used
+
+## Check Minikube
+
+```bash
+minikube status
+```
+
+## Check Kubernetes Nodes
+
+```bash
+kubectl get nodes
+```
+
+## Check all Pods
+
+```bash
+kubectl get pods -A
+```
+
+## Create Deployment
+
+```bash
+kubectl create deployment nginx-deployment --image=nginx
+```
+
+## Check Deployment
+
+```bash
+kubectl get deployments
+```
+
+## Check Pods
+
+```bash
+kubectl get pods
+```
+
+## Check ReplicaSets
+
+```bash
+kubectl get rs
+```
+
+## Create Service
+
+```bash
+kubectl expose deployment nginx-deployment --type=NodePort --port=80
+```
+
+## Check Services
+
+```bash
+kubectl get services
+```
+
+## Access Nginx
+
+```bash
+minikube service nginx-deployment
+```
+
+## Scale to 3 replicas
+
+```bash
+kubectl scale deployment nginx-deployment --replicas=3
+```
+
+## Check Service endpoints
+
+```bash
+kubectl get endpoints nginx-deployment
+```
+
+## Check modern EndpointSlices
+
+```bash
+kubectl get endpointslices -l kubernetes.io/service-name=nginx-deployment
+```
+
+## Describe Service
+
+```bash
+kubectl describe service nginx-deployment
+```
+
+## Delete a Pod to test self-healing
+
+```bash
+kubectl delete pod <pod-name>
+```
+
+---
+
+# 26. Verification
+
+The following checks were performed successfully.
+
+### Kubernetes Cluster
+
+```text
+minikube   Ready
+```
+
+### Deployment
+
+```text
+nginx-deployment   3/3   3   3
+```
+
+### Pods
+
+```text
+3 Nginx Pods
+3/3 Running
+```
+
+### ReplicaSet
+
+```text
+DESIRED   CURRENT   READY
+3         3         3
+```
+
+### Service
+
+```text
+Type: NodePort
+Port: 80
+NodePort: 30279
+```
+
+### Browser
+
+```text
+Welcome to nginx!
+```
+
+### Service Endpoints
+
+Three Nginx Pod endpoints were available behind the Service.
+
+### Self-Healing
+
+After deleting one Pod, Kubernetes automatically created a replacement Pod and restored the desired replica count to three.
+
+---
+
+# 27. What I Learned
+
+Through this homework, I learned how Kubernetes manages a containerized application from deployment to external access.
+
+The major concepts demonstrated were:
+
+1. **Minikube** — provides a local Kubernetes cluster for development and learning.
+2. **Node** — provides the environment where Kubernetes workloads run.
+3. **Pod** — provides the smallest deployable unit containing the Nginx container.
+4. **Deployment** — manages the desired state of the Nginx application.
+5. **ReplicaSet** — maintains the required number of Nginx Pods.
+6. **Service** — provides stable networking and routes traffic to the Pods.
+7. **NodePort** — exposes the application outside the Kubernetes cluster.
+8. **Scaling** — increases the number of application replicas.
+9. **Self-healing** — Kubernetes automatically replaces deleted Pods.
+
+---
+
+# 28. Key Kubernetes Concept
+
+The most important concept demonstrated in this homework is:
+
+```text
+                 DESIRED STATE
+                      |
+                      v
+                 Deployment
+                      |
+                      v
+                  ReplicaSet
+                      |
+                      v
+               Actual Pod State
+                      |
+                      v
+              Kubernetes continuously
+              reconciles the difference
+```
+
+For example:
+
+```text
+Desired: 3 Pods
+Actual:  3 Pods
+       ↓
+     Healthy
+```
+
+If a Pod is deleted:
+
+```text
+Desired: 3 Pods
+Actual: 2 Pods
+       ↓
+ReplicaSet detects difference
+       ↓
+Creates replacement Pod
+       ↓
+Desired: 3 Pods
+Actual: 3 Pods
+       ↓
+     Healthy
+```
+
+This **desired-state + reconciliation + self-healing model** is one of the fundamental principles of Kubernetes.
+
+---
+
+# 29. Final Result
+
+The Nginx web application was successfully deployed on a local Kubernetes cluster using Minikube.
+
+The application was:
+
+* Deployed using a Kubernetes Deployment.
+* Managed by a ReplicaSet.
+* Running with three replicas.
+* Exposed through a NodePort Service.
+* Accessible from the host machine.
+* Verified through three Service endpoints.
+* Tested for Kubernetes self-healing by deleting a Pod and observing automatic replacement.
+
+Therefore, **Homework 1 — Deploy a Simple Web Application** was successfully completed.
+---
+
+# Homework 2 — Namespace Isolation in Kubernetes
+## Homework 2 ScreenRecord
+
+https://github.com/user-attachments/assets/af704949-5149-4954-ac1d-1d92e01f3ffb
+
+## 1. Objective
+
+The objective of this homework is to understand and demonstrate **Namespace Isolation** in Kubernetes.
+
+In this practical, we create two separate namespaces:
+
+- `dev` — Development environment 
+- `prod` — Production environment 
+
+We then deploy one Pod in each namespace and assign a different environment variable to each Pod:
+```
+dev namespace  → ENV=dev
+prod namespace → ENV=prod
+```
+
+Finally, we verify that the Pods belong to their respective namespaces and can be independently accessed using Kubernetes namespace commands.
+
+---
+
+# 2. What is a Kubernetes Namespace?
+
+A **Namespace** is a logical partition inside a Kubernetes cluster.
+
+It allows us to organize Kubernetes resources into separate environments or teams while using the same Kubernetes cluster.
+
+For example, a real company could have:
+```
+Kubernetes Cluster
+│
+├── development
+│   ├── Backend
+│   ├── Frontend
+│   └── Database
+│
+├── testing
+│   ├── Backend
+│   └── Database
+│
+└── production
+    ├── Backend
+    ├── Frontend
+    └── Database
+```
+
+In our homework, we use only two namespaces:
+```
+Kubernetes Cluster
+│
+├── dev
+│   └── dev-pod
+│
+└── prod
+    └── prod-pod
+```
+
+---
+
+# 3. Why Do We Need Namespaces?
+
+Imagine a company has a development environment and a production environment.
+
+Developers may frequently create, update, and delete resources in development.
+
+Production resources, however, need to be managed carefully.
+
+Without namespaces, a cluster could become difficult to organize:
+```
+Kubernetes Cluster
+│
+├── backend
+├── frontend
+├── database
+├── backend
+├── frontend
+├── database
+└── ...
+```
+
+It becomes difficult to understand which resource belongs to which environment.
+
+With namespaces:
+```
+Kubernetes Cluster
+│
+├── dev
+│   ├── backend
+│   ├── frontend
+│   └── database
+│
+└── prod
+    ├── backend
+    ├── frontend
+    └── database
+```
+
+This provides a much cleaner organizational structure.
+
+---
+
+# 4. Namespace Isolation Architecture
+
+Our homework uses the following architecture:
+```
+                    Kubernetes Cluster
+                           │
+             ┌─────────────┴─────────────┐
+             │                           │
+             ▼                           ▼
+      ┌──────────────┐           ┌──────────────┐
+      │     dev      │           │     prod     │
+      │   Namespace  │           │   Namespace  │
+      └──────┬───────┘           └──────┬───────┘
+             │                           │
+             ▼                           ▼
+       ┌───────────┐               ┌───────────┐
+       │  dev-pod  │               │ prod-pod  │
+       └─────┬─────┘               └─────┬─────┘
+             │                           │
+             ▼                           ▼
+          ENV=dev                     ENV=prod
+```
+
+Both Pods run inside the same Kubernetes cluster, but they belong to different namespaces.
+
+---
+
+# 5. Minikube and Kubernetes Cluster
+
+For this homework, we used **Minikube** to run Kubernetes locally.
+
+The overall environment is:
+```
+Windows Machine
+       │
+       ▼
+Docker Desktop
+       │
+       ▼
+Minikube
+       │
+       ▼
+Kubernetes Cluster
+       │
+       ├── dev Namespace
+       │
+       └── prod Namespace
+```
+
+Before starting the homework, we verified that Minikube was running:
+```
+minikube status
+```
+
+The cluster showed:
+```
+host: Running
+kubelet: Running
+apiserver: Running
+kubeconfig: Configured
+```
+
+We also verified the Kubernetes Node:
+```
+kubectl get nodes
+```
+
+The Minikube Node was in:
+```
+Ready
+```
+
+state.
+
+---
+
+# 6. Checking Existing Namespaces
+
+We first checked the namespaces available in the Kubernetes cluster:
+```
+kubectl get namespaces
+```
+
+A new Minikube cluster already contains several system namespaces.
+
+Typical namespaces include:
+```
+default
+kube-system
+kube-public
+kube-node-lease
+```
+
+These are created and used by Kubernetes itself.
+
+We then created our own application namespaces:
+```
+dev
+prod
+```
+
+---
+
+# 7. Creating the Development Namespace
+
+We created the development namespace using:
+```
+kubectl create namespace dev
+```
+
+Kubernetes created:
+```
+namespace/dev created
+```
+
+We verified it using:
+```
+kubectl get namespaces
+```
+
+The namespace appeared as:
+```
+dev    Active
+```
+
+---
+
+# 8. Creating the Production Namespace
+
+We then created the production namespace:
+```
+kubectl create namespace prod
+```
+
+After creation, we verified:
+```
+kubectl get namespaces
+```
+
+The cluster now contained:
+```
+default
+dev
+prod
+kube-node-lease
+kube-public
+kube-system
+```
+
+Our application environments were now logically separated:
+```
+Kubernetes Cluster
+│
+├── dev
+│
+└── prod
+```
+
+---
+
+# 9. Creating the Development Pod
+
+For this homework, we don't need a web application.
+
+We only need a lightweight container to demonstrate namespaces and environment variables.
+
+Therefore, we used the **BusyBox** image.
+
+We created the development Pod using:
+```
+kubectl run dev-pod --image=busybox --restart=Never --env="ENV=dev" --namespace=dev -- sleep 3600
+```
+
+Let's understand the command.
+
+### `kubectl run`
+
+Creates a Pod.
+
+### `dev-pod`
+
+The name of our Pod.
+
+### `--image=busybox`
+
+Uses the BusyBox container image.
+
+### `--restart=Never`
+
+Creates a standalone Pod rather than a Deployment.
+
+### `--env="ENV=dev"`
+
+Creates the environment variable:
+```
+ENV=dev
+```
+
+### `--namespace=dev`
+
+Places the Pod inside the `dev` namespace.
+
+### `-- sleep 3600`
+
+Keeps the BusyBox container running for enough time so that we can inspect it.
+
+---
+
+# 10. Development Pod Architecture
+
+The resulting structure is:
+```
+dev Namespace
+     │
+     ▼
+  dev-pod
+     │
+     ▼
+BusyBox Container
+     │
+     └── ENV=dev
+```
+
+We verified the Pod using:
+```
+kubectl get pods -n dev
+```
+
+The Pod reached:
+```
+1/1 Running
+```
+
+---
+
+# 11. Verifying the Development Environment Variable
+
+To verify that the environment variable was actually present inside the container, we used:
+```
+kubectl exec -n dev dev-pod -- printenv ENV
+```
+
+The output was:
+```
+dev
+```
+
+This proves that:
+```
+dev-pod
+   ↓
+ENV=dev
+```
+
+was successfully configured.
+
+---
+
+# 12. Creating the Production Pod
+
+We then created a second Pod in the `prod` namespace.
+
+Command:
+```
+kubectl run prod-pod --image=busybox --restart=Never --env="ENV=prod" --namespace=prod -- sleep 3600
+```
+
+The important differences are:
+```
+Pod name:
+prod-pod
+
+Namespace:
+prod
+
+Environment variable:
+ENV=prod
+```
+
+---
+
+# 13. Production Pod Architecture
+
+The resulting structure is:
+```
+prod Namespace
+      │
+      ▼
+   prod-pod
+      │
+      ▼
+BusyBox Container
+      │
+      └── ENV=prod
+```
+
+We verified the Pod using:
+```
+kubectl get pods -n prod
+```
+
+The Pod reached:
+```
+1/1 Running
+```
+
+---
+
+# 14. Verifying the Production Environment Variable
+
+We used:
+```
+kubectl exec -n prod prod-pod -- printenv ENV
+```
+
+The output was:
+```
+prod
+```
+
+This proves that:
+```
+prod-pod
+   ↓
+ENV=prod
+```
+
+was successfully configured.
+
+---
+
+# 15. Development vs Production
+
+Our final configuration is:
+
+| PropertyDevelopmentProduction |           |            |
+| ----------------------------- | --------- | ---------- |
+| Namespace                     | `dev`     | `prod`     |
+| Pod                           | `dev-pod` | `prod-pod` |
+| Image                         | BusyBox   | BusyBox    |
+| Environment Variable          | `ENV=dev` | `ENV=prod` |
+| Status                        | Running   | Running    |
+
+The important distinction is:
+```
+dev namespace
+    ↓
+dev-pod
+    ↓
+ENV=dev
+```
+
+while:
+```
+prod namespace
+    ↓
+prod-pod
+    ↓
+ENV=prod
+```
+
+---
+
+# 16. Verifying Pods Separately
+
+Kubernetes commands can be executed against a specific namespace using:
+```
+-n <namespace>
+```
+
+For development:
+```
+kubectl get pods -n dev
+```
+
+For production:
+```
+kubectl get pods -n prod
+```
+
+This allows us to inspect each environment independently.
+
+---
+
+# 17. What Happens Without `-n`?
+
+When we run:
+```
+kubectl get pods
+```
+
+Kubernetes checks the **current/default namespace**.
+
+It does not automatically show Pods from every namespace.
+
+Therefore:
+```
+kubectl get pods
+```
+
+and:
+```
+kubectl get pods -n dev
+```
+
+are different commands.
+
+The second explicitly tells Kubernetes:
+
+> Show me Pods belonging to the `dev` namespace.
+
+Similarly:
+```
+kubectl get pods -n prod
+```
+
+means:
+
+> Show me Pods belonging to the `prod` namespace.
+
+---
+
+# 18. Viewing Pods Across All Namespaces
+
+To view Pods from every namespace, we can use:
+```
+kubectl get pods -A
+```
+
+`-A` means:
+```
+--all-namespaces
+```
+
+The output allows us to clearly see:
+```
+NAMESPACE     NAME
+default       ...
+dev           dev-pod
+prod          prod-pod
+kube-system   ...
+```
+
+This is an important verification because it shows the namespace associated with each Pod.
+
+---
+
+# 19. Namespace Isolation Demonstration
+
+The final structure is:
+```
+                     Kubernetes Cluster
+                            │
+          ┌─────────────────┴─────────────────┐
+          │                                   │
+          ▼                                   ▼
+   ┌───────────────┐                   ┌───────────────┐
+   │ dev Namespace │                   │ prod Namespace│
+   └───────┬───────┘                   └───────┬───────┘
+           │                                   │
+           ▼                                   ▼
+      ┌─────────┐                         ┌─────────┐
+      │ dev-pod │                         │prod-pod │
+      └────┬────┘                         └────┬────┘
+           │                                   │
+           ▼                                   ▼
+       ENV=dev                             ENV=prod
+```
+
+This demonstrates the basic concept of **logical namespace isolation**.
+
+---
+
+# 20. Important Clarification — What Does "Isolation" Mean?
+
+Namespace isolation should be understood correctly.
+
+Namespaces provide **logical and administrative separation** of Kubernetes resources.
+
+They help with:
+
+-  Resource organization 
+-  Resource naming 
+-  Access-control scope 
+-  Resource management 
+-  Environment separation 
+
+However, namespaces by themselves do **not automatically prevent network communication** between Pods in different namespaces.
+
+For example:
+```
+dev Pod  ────────────> prod Pod
+```
+
+may still be possible depending on the Kubernetes networking configuration.
+
+If we want to control network traffic between namespaces, we can use:
+```
+NetworkPolicy
+```
+
+If we want to control who can perform Kubernetes operations, we can use:
+```
+RBAC
+```
+
+Therefore:
+```
+Namespace
+    ↓
+Logical organization / isolation
+
+RBAC
+    ↓
+Permission isolation
+
+NetworkPolicy
+    ↓
+Network isolation
+```
+
+This distinction is important in real-world Kubernetes deployments.
+
+---
+
+# 21. Why Environment Variables Are Used
+
+The homework requires us to distinguish the environments.
+
+We use:
+```
+ENV=dev
+```
+
+for development and:
+```
+ENV=prod
+```
+
+for production.
+
+In real applications, environment variables are commonly used to configure application behavior.
+
+For example:
+```
+Development:
+
+ENV=dev
+DATABASE_HOST=dev-db
+LOG_LEVEL=DEBUG
+```
+
+Production:
+```
+ENV=prod
+DATABASE_HOST=prod-db
+LOG_LEVEL=INFO
+```
+
+The application can read these values and behave differently depending on the environment.
+
+In our homework, we use only:
+```
+ENV
+```
+
+to keep the demonstration simple.
+
+---
+
+# 22. Why Did We Use BusyBox?
+
+We used BusyBox because this homework is focused on **Namespaces**, not application deployment.
+
+We don't need:
+
+-  Nginx 
+-  Service 
+-  Deployment 
+-  ReplicaSet 
+-  Multiple replicas 
+
+We only need a simple running container where we can verify the environment variable.
+
+Therefore:
+```
+BusyBox
+   ↓
+Lightweight container
+   ↓
+Easy to create
+   ↓
+Easy to inspect
+```
+
+This keeps the Kubernetes demonstration focused on the actual learning objective.
+
+---
+
+# 23. Namespace vs Pod
+
+A common beginner confusion is thinking that a namespace is a container for a single Pod.
+
+It isn't.
+
+A namespace can contain many different Kubernetes resources:
+```
+dev Namespace
+│
+├── Deployment
+├── ReplicaSet
+├── Pods
+├── Services
+├── ConfigMaps
+├── Secrets
+└── PersistentVolumeClaims
+```
+
+Similarly:
+```
+prod Namespace
+│
+├── Deployment
+├── ReplicaSet
+├── Pods
+├── Services
+├── ConfigMaps
+├── Secrets
+└── PersistentVolumeClaims
+```
+
+Therefore, namespaces are useful for organizing entire application environments.
+
+---
+
+# 24. Namespace Resource Organization
+
+A real Spring Boot application could eventually look like:
+```
+Kubernetes Cluster
+│
+├── dev
+│   ├── Spring Boot Deployment
+│   ├── Spring Boot Pods
+│   ├── MySQL
+│   └── Services
+│
+└── prod
+    ├── Spring Boot Deployment
+    ├── Spring Boot Pods
+    ├── MySQL
+    └── Services
+```
+
+This is one reason namespaces are important when moving from local Kubernetes practice to real production environments.
+
+---
+
+# 25. Commands Used
+
+## Check Minikube
+```
+minikube status
+```
+
+## Check Kubernetes Nodes
+```
+kubectl get nodes
+```
+
+## List Namespaces
+```
+kubectl get namespaces
+```
+
+## Create Development Namespace
+```
+kubectl create namespace dev
+```
+
+## Create Production Namespace
+```
+kubectl create namespace prod
+```
+
+## Create Development Pod
+```
+kubectl run dev-pod --image=busybox --restart=Never --env="ENV=dev" --namespace=dev -- sleep 3600
+```
+
+## Create Production Pod
+```
+kubectl run prod-pod --image=busybox --restart=Never --env="ENV=prod" --namespace=prod -- sleep 3600
+```
+
+## View Development Pod
+```
+kubectl get pods -n dev
+```
+
+## View Production Pod
+```
+kubectl get pods -n prod
+```
+
+## View Pods Across All Namespaces
+```
+kubectl get pods -A
+```
+
+## Verify Development Environment Variable
+```
+kubectl exec -n dev dev-pod -- printenv ENV
+```
+
+Output:
+```
+dev
+```
+
+## Verify Production Environment Variable
+```
+kubectl exec -n prod prod-pod -- printenv ENV
+```
+
+Output:
+```
+prod
+```
+
+## Describe Development Pod
+```
+kubectl describe pod dev-pod -n dev
+```
+
+## Describe Production Pod
+```
+kubectl describe pod prod-pod -n prod
+```
+
+---
+
