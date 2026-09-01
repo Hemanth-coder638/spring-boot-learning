@@ -2501,3 +2501,622 @@ Through this homework, I learned how a real backend application can be deployed 
 | **Postman**      | Tests the Banking REST APIs                 |
 
 **This is the main learning outcome of the homework: instead of treating the database as something running separately on my laptop, I deployed the backend and database as Kubernetes workloads and used persistent storage to protect the database data from Pod restarts/recreation.**
+---
+
+
+# Homework 4: StatefulSet with Headless Service
+
+## Homework Statement
+
+**StatefulSet with Headless Service**
+
+-  Deploy a StatefulSet for a simple application, such as Redis or MySQL, that requires stable, unique network IDs. 
+-  Create a headless service to enable direct pod-to-pod communication. 
+-  Verify that each pod has a stable hostname and consistent storage. 
+
+---
+
+# Objective
+
+In this homework, I implemented a **PostgreSQL StatefulSet with 3 replicas** and a **Headless Service**.
+I used PostgreSQL instead of Redis/MySQL because PostgreSQL was already used in my previous homework.
+I also deployed my **Spring Boot Banking application** in the same Minikube cluster.
+The main things I demonstrated were:
+
+-  StatefulSet with multiple replicas 
+-  Stable and unique pod names 
+-  Stable pod hostnames 
+-  Headless Service 
+-  Individual PVC for each StatefulSet pod 
+-  Pod endpoint discovery 
+-  Kubernetes networking between application and database 
+
+---
+
+# Architecture
+```
+                         Minikube Cluster
+                                │
+                ┌───────────────┴────────────────┐
+                │                                │
+        Banking Application              PostgreSQL StatefulSet
+                │                         3 replicas
+                │                                │
+                │                  ┌─────────────┼─────────────┐
+                │                  │             │             │
+                │            postgres-hw4-0  postgres-hw4-1  postgres-hw4-2
+                │                  │             │             │
+                │                 PVC           PVC           PVC
+                │                  │             │             │
+                │                 PV            PV            PV
+                │
+        banking-hw4 Service
+             NodePort
+                │
+             Postman
+```
+
+The important networking component for this homework is:
+
+```
+```
+
+```
+              postgres-hw4-headless
+                       │
+             ┌─────────┼─────────┐
+             │         │         │
+             ▼         ▼         ▼
+        postgres-0  postgres-1  postgres-2
+```
+
+---
+
+# 1. Create Headless Service
+
+First, I created the Headless Service using the Kubernetes YAML file.
+
+### Command
+
+```
+```
+
+```
+kubectl apply -f postgres-hw4-headless-service.yaml
+```
+
+### Output
+
+```
+```
+
+```
+service/postgres-hw4-headless created
+```
+
+Then I checked the services.
+
+### Command
+
+```
+```
+
+```
+kubectl get service
+```
+
+### Important Output
+
+```
+```
+
+```
+postgres-hw4-headless   ClusterIP   None   5432/TCP
+```
+
+The important point here is:
+
+```
+```
+
+```
+ClusterIP: None
+```
+
+This confirms that `postgres-hw4-headless` is a **Headless Service**.
+
+A Headless Service does not provide a normal virtual ClusterIP. Instead, it allows Kubernetes DNS to discover the individual pods behind the service.
+
+---
+
+# 2. Create PostgreSQL StatefulSet
+
+Next, I created the PostgreSQL StatefulSet.
+
+### Command
+
+```
+```
+
+```
+kubectl apply -f postgres-hw4-statefulset.yaml
+```
+
+### Output
+
+```
+```
+
+```
+statefulset.apps/postgres-hw4 created
+```
+
+The StatefulSet was configured with **3 replicas**.
+
+I then checked the StatefulSets.
+
+### Command
+
+```
+```
+
+```
+kubectl get statefulsets
+```
+
+### Result
+
+```
+```
+
+```
+postgres-hw4   1/3
+```
+
+After the pods finished starting, all 3 replicas became ready.
+
+---
+
+# 3. Verify PostgreSQL Pods
+
+I checked all the pods running inside the cluster.
+
+### Command
+
+```
+```
+
+```
+kubectl get pods
+```
+
+### Result
+
+```
+```
+
+```
+postgres-hw4-0
+postgres-hw4-1
+postgres-hw4-2
+```
+
+All three PostgreSQL pods were running.
+
+The important difference compared with a normal Deployment is that StatefulSet pods have **predictable names**.
+
+The naming pattern is:
+
+```
+```
+
+```
+postgres-hw4-0
+postgres-hw4-1
+postgres-hw4-2
+```
+
+The ordinal numbers identify each StatefulSet replica.
+
+---
+
+# 4. Verify Individual Persistent Storage
+
+Next, I checked the PersistentVolumeClaims created for the StatefulSet.
+
+### Command
+
+```
+```
+
+```
+kubectl get pvc
+```
+
+The StatefulSet created three separate PVCs:
+
+```
+```
+
+```
+postgres-storage-postgres-hw4-0
+postgres-storage-postgres-hw4-1
+postgres-storage-postgres-hw4-2
+```
+
+Each PVC showed:
+
+```
+```
+
+```
+STATUS: Bound
+CAPACITY: 1Gi
+ACCESS MODE: RWO
+```
+
+This demonstrates that each StatefulSet pod gets its **own persistent storage**.
+
+The relationship is:
+
+```
+```
+
+```
+postgres-hw4-0
+      ↓
+postgres-storage-postgres-hw4-0
+
+postgres-hw4-1
+      ↓
+postgres-storage-postgres-hw4-1
+
+postgres-hw4-2
+      ↓
+postgres-storage-postgres-hw4-2
+```
+
+Therefore, each PostgreSQL replica has its own storage.
+
+---
+
+# 5. Verify Stable Hostname of postgres-hw4-0
+
+Next, I verified the hostname of the first PostgreSQL pod.
+
+### Command
+
+```
+```
+
+```
+kubectl exec postgres-hw4-0 -- hostname
+```
+
+### Output
+
+```
+```
+
+```
+postgres-hw4-0
+```
+
+This confirms that the hostname is the same as the StatefulSet pod identity.
+
+---
+
+# 6. Verify Stable Hostname of postgres-hw4-1
+
+### Command
+
+```
+```
+
+```
+kubectl exec postgres-hw4-1 -- hostname
+```
+
+### Output
+
+```
+```
+
+```
+postgres-hw4-1
+```
+
+---
+
+# 7. Verify Stable Hostname of postgres-hw4-2
+
+### Command
+
+```
+```
+
+```
+kubectl exec postgres-hw4-2 -- hostname
+```
+
+### Output
+
+```
+```
+
+```
+postgres-hw4-2
+```
+
+Therefore, the three pods have stable and unique hostnames:
+
+```
+```
+
+```
+postgres-hw4-0
+postgres-hw4-1
+postgres-hw4-2
+```
+
+This satisfies the **stable hostname** requirement of the homework.
+
+---
+
+# 8. Verify Headless Service Endpoints
+
+Next, I checked the EndpointSlices.
+
+### Command
+
+```
+```
+
+```
+kubectl get endpointslice
+```
+
+The Headless Service showed three PostgreSQL pod IP addresses:
+
+```
+```
+
+```
+postgres-hw4-headless
+10.244.0.28
+10.244.0.29
+10.244.0.30
+```
+
+This confirms that the Headless Service is associated with the three PostgreSQL pods.
+
+Instead of pointing to one virtual ClusterIP, the Headless Service exposes the individual pod endpoints.
+
+---
+
+# 9. Deploy Banking Application
+
+After verifying the PostgreSQL StatefulSet and Headless Service, I deployed my Spring Boot Banking application.
+
+### Command
+
+```
+```
+
+```
+kubectl apply -f banking-hw4-deployment.yaml
+```
+
+### Output
+
+```
+deployment.apps/banking-hw4 created
+```
+
+Then I created the Banking Service.
+
+### Command
+```
+kubectl apply -f banking-hw4-service.yaml
+```
+
+### Output
+```
+service/banking-hw4 created
+```
+
+---
+
+# 10. Verify Banking Application Pod
+
+I checked the pods again.
+
+### Command
+```
+kubectl get pods
+```
+
+The Banking application pod was running:
+```
+banking-hw4-795977b987-l6mkx   1/1   Running
+```
+
+Along with the PostgreSQL StatefulSet pods:
+```
+postgres-hw4-0
+postgres-hw4-1
+postgres-hw4-2
+```
+
+So both the Banking application and PostgreSQL StatefulSet were running inside the same Minikube cluster.
+
+---
+
+# 11. Verify Banking Application Logs
+
+I checked the Banking application logs.
+
+### Command
+```
+kubectl logs deployment/banking-hw4
+```
+
+Initially, the application showed:
+```
+Connection to localhost:5432 refused
+```
+
+The reason was that the Banking application was trying to connect to:
+```
+localhost:5432
+```
+
+Inside the Banking pod, `localhost` refers to the **Banking pod itself**, not the PostgreSQL pod.
+
+Therefore, the application cannot use:
+```
+jdbc:postgresql://localhost:5432/...
+```
+
+to connect to PostgreSQL running in another Kubernetes pod.
+The application must use the appropriate Kubernetes Service/DNS name to communicate with PostgreSQL.
+
+---
+
+# 12. How Pod-to-Pod Communication Works
+
+This is an important part of this homework.
+
+The Headless Service was created as:
+```
+postgres-hw4-headless
+```
+
+with:
+```
+ClusterIP: None
+```
+
+It points to the PostgreSQL StatefulSet pods:
+```
+postgres-hw4-headless
+        │
+        ├── postgres-hw4-0
+        ├── postgres-hw4-1
+        └── postgres-hw4-2
+```
+
+The EndpointSlice confirmed the individual pod IP addresses:
+```
+10.244.0.28
+10.244.0.29
+10.244.0.30
+```
+
+The Headless Service therefore provides **DNS-based discovery of the individual PostgreSQL pods**.
+
+The StatefulSet + Headless Service combination gives stable network identities for the pods.
+
+The expected DNS naming pattern is:
+```
+postgres-hw4-0.postgres-hw4-headless
+postgres-hw4-1.postgres-hw4-headless
+postgres-hw4-2.postgres-hw4-headless
+```
+
+So another pod inside the Kubernetes cluster can discover a specific PostgreSQL pod using its stable DNS identity.
+
+> **Note:** In this homework, I verified the Headless Service and its individual pod endpoints. I did not perform a separate manual DNS/network connection test between two PostgreSQL pods. Therefore, the practical evidence recorded here is **pod discovery through the Headless Service**, which enables direct pod-to-pod communication.
+
+---
+
+# 13. Final Verification
+
+At the end, I verified the important StatefulSet components.
+
+### Check StatefulSet
+```
+kubectl get statefulsets
+```
+
+### Check Pods
+```
+kubectl get pods
+```
+
+### Check Persistent Storage
+```
+kubectl get pvc
+```
+
+### Check Services
+```
+kubectl get service
+```
+
+### Check Pod Endpoints
+```
+kubectl get endpointslice
+```
+
+### Check Individual Hostnames
+```
+kubectl exec postgres-hw4-0 -- hostname
+kubectl exec postgres-hw4-1 -- hostname
+kubectl exec postgres-hw4-2 -- hostname
+```
+
+---
+
+# 📊 Final Kubernetes Structure
+```
+Minikube Cluster
+│
+├── Banking Application
+│   └── banking-hw4-xxxxx
+│
+├── Banking Service
+│   └── banking-hw4
+│
+├── PostgreSQL StatefulSet
+│   ├── postgres-hw4-0
+│   │   └── PVC → postgres-storage-postgres-hw4-0
+│   │
+│   ├── postgres-hw4-1
+│   │   └── PVC → postgres-storage-postgres-hw4-1
+│   │
+│   └── postgres-hw4-2
+│       └── PVC → postgres-storage-postgres-hw4-2
+│
+└── Headless Service
+    └── postgres-hw4-headless
+        ├── postgres-hw4-0
+        ├── postgres-hw4-1
+        └── postgres-hw4-2
+```
+
+---
+
+# 🎯 Conclusion
+
+In this homework, I deployed a **PostgreSQL StatefulSet with 3 replicas** and created a **Headless Service**.
+
+I verified that StatefulSet created predictable pod identities:
+```
+postgres-hw4-0
+postgres-hw4-1
+postgres-hw4-2
+```
+
+I also verified that each pod received its own persistent storage through separate PVCs.
+
+The Headless Service had:
+```
+ClusterIP: None
+```
+
+and its EndpointSlice contained the IP addresses of all three PostgreSQL pods.
+
+This demonstrates how **StatefulSet + Headless Service** provides stable pod identities, stable hostnames, persistent storage, and DNS-based discovery for direct communication between pods.
+
+The Spring Boot Banking application was also deployed into the same Minikube cluster, demonstrating how an application can communicate with services running inside Kubernetes rather than using `localhost`.
