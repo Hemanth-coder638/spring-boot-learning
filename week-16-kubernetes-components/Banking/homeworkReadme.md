@@ -1910,3 +1910,594 @@ kubectl describe pod prod-pod -n prod
 
 ---
 
+# Homework 3: Persistent Volumes with StatefulSet
+## Homework3 ScreenRecord
+
+https://github.com/user-attachments/assets/e3ecfc5a-f63e-4689-9107-5dbb0ef8d7f8
+
+## Objective
+
+Set up a **PostgreSQL database using a Kubernetes StatefulSet** with persistent storage. The Spring Boot Banking application is connected to this PostgreSQL database running inside Kubernetes.
+The main objective is to verify that the database data **does not get lost when the PostgreSQL Pod is deleted and recreated**.
+For this implementation, I used **PostgreSQL instead of MySQL** because my Banking Spring Boot application was already developed using PostgreSQL.
+
+---
+
+# 1. Banking Spring Boot Application
+
+I used my existing **Banking Spring Boot backend application** for this homework.
+The application uses:
+
+-  Spring Boot 3.5.11 
+-  Java 21 
+-  Spring Data JPA 
+-  PostgreSQL 
+-  Hibernate 
+-  Maven 
+
+The database configuration uses environment variables instead of hardcoding the database connection details.
+```
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+```
+
+This allows the same application to work with different database environments.
+
+---
+
+# 2. Build the Spring Boot Application
+
+Before deploying the application into Kubernetes, I created the executable JAR file using Maven.
+```
+mvn clean package
+```
+
+The build completed successfully.
+
+The generated JAR file was:
+```
+target/Banking-0.0.1-SNAPSHOT.jar
+```
+
+This JAR was then used to create the Docker image for the Banking application.
+
+---
+
+# 3. Create Docker Image
+
+I created a Dockerfile for the Spring Boot application.
+```
+FROM eclipse-temurin:21-jre
+
+WORKDIR /app
+
+COPY target/Banking-0.0.1-SNAPSHOT.jar app.jar
+
+EXPOSE 1212
+
+ENTRYPOINT ["java", "-jar", "app.jar"]
+```
+
+Then I built the Docker image:
+```
+docker build -t banking-app:1.0 .
+```
+
+The image was successfully created.
+
+Since I was using Minikube, I loaded the image into the Minikube environment:
+```
+minikube image load banking-app:1.0
+```
+
+I verified that Minikube could see the image:
+```
+minikube image ls
+```
+
+The following image was available:
+```
+docker.io/library/banking-app:1.0
+```
+
+---
+
+# 4. Create PostgreSQL StatefulSet
+
+Next, I created a Kubernetes StatefulSet for PostgreSQL.
+
+The StatefulSet manages the PostgreSQL Pod:
+```
+StatefulSet
+    ↓
+postgres-0
+```
+
+The important reason for using a **StatefulSet** is that databases require stable Pod identity and persistent storage.
+
+After applying the StatefulSet configuration:
+```
+kubectl apply -f postgres-statefulset.yaml
+```
+
+Kubernetes created:
+```
+statefulset.apps/postgres created
+```
+
+I then checked the resources:
+```
+kubectl get statefulsets,pods,pvc,pv
+```
+
+The PostgreSQL Pod was created as:
+```
+postgres-0
+```
+
+Initially, it took some time to start:
+```
+ContainerCreating
+```
+
+After the database started successfully:
+```
+postgres-0    1/1    Running
+```
+
+---
+
+# 5. PersistentVolumeClaim and PersistentVolume
+
+The StatefulSet automatically created a PersistentVolumeClaim for the PostgreSQL Pod.
+
+I verified it using:
+```
+kubectl get pvc
+```
+
+The PVC was:
+```
+postgres-storage-postgres-0
+```
+
+and its status was:
+```
+Bound
+```
+
+with:
+```
+Capacity: 1Gi
+Access Mode: RWO
+StorageClass: standard
+```
+
+Kubernetes also created the corresponding PersistentVolume.
+
+The storage relationship is:
+```
+PostgreSQL StatefulSet
+        |
+        ↓
+    postgres-0
+        |
+        ↓
+      PVC
+        |
+        ↓
+       PV
+        |
+        ↓
+ PostgreSQL Data
+```
+
+The important point is that the PostgreSQL data is stored in persistent storage rather than only inside the Pod's temporary filesystem.
+
+---
+
+# 6. Verify PostgreSQL Database
+
+After the PostgreSQL Pod became ready, I connected directly to PostgreSQL using:
+```
+kubectl exec -it postgres-0 -- psql -U postgres -d bankingdatabase
+```
+
+Inside PostgreSQL, I checked the database version:
+```
+SELECT version();
+```
+
+PostgreSQL was running successfully.
+
+I also checked the available databases:
+```
+\l
+```
+
+The `bankingdatabase` database was available.
+
+At this stage, the database was successfully running inside Kubernetes.
+
+---
+
+# 7. Create PostgreSQL Service
+
+Next, I created a Kubernetes Service for PostgreSQL:
+```
+kubectl apply -f postgres-service.yaml
+```
+
+The service was created as:
+```
+postgres
+```
+
+I verified it using:
+```
+kubectl get service
+```
+
+The PostgreSQL Service uses port:
+```
+5432
+```
+
+The Service provides a stable DNS name for the PostgreSQL database.
+
+Therefore, instead of the Banking application connecting to a changing Pod IP, it connects to:
+```
+postgres:5432
+```
+
+The communication is:
+```
+Banking Application
+       |
+       ↓
+postgres Service
+       |
+       ↓
+postgres-0
+       |
+       ↓
+PostgreSQL
+```
+
+---
+
+# 8. Verify Persistent Storage Before Testing
+
+To prove that the persistent volume is actually working, I created a small test table inside PostgreSQL:
+```
+CREATE TABLE persistence_test (
+    id SERIAL PRIMARY KEY,
+    message VARCHAR(100)
+);
+```
+
+Then I inserted test data:
+```
+INSERT INTO persistence_test (message)
+VALUES ('Data survives pod restart');
+```
+
+I verified the data:
+```
+SELECT * FROM persistence_test;
+```
+
+The result was:
+```
+ id |          message
+----+---------------------------
+  1 | Data survives pod restart
+```
+
+This gave me an initial piece of data that I could check after deleting the Pod.
+
+---
+
+# 9. Deploy Banking Application
+
+After PostgreSQL was running successfully, I deployed my Spring Boot Banking application.
+```
+kubectl apply -f banking-deployment.yaml
+```
+
+The Deployment was created:
+```
+deployment.apps/banking created
+```
+
+I also created the Banking Service:
+```
+kubectl apply -f banking-service.yaml
+```
+
+Then I verified the Pods:
+```
+kubectl get pods
+```
+
+The result showed both applications running:
+```
+banking-xxxxxxxxxx    1/1    Running
+postgres-0             1/1    Running
+```
+
+So now Kubernetes was running both:
+```
+Spring Boot Banking
+        +
+PostgreSQL
+```
+
+---
+
+# 10. Verify Banking Application Connection
+
+I checked the Banking application logs:
+```
+kubectl logs deployment/banking
+```
+
+The application successfully started on:
+```
+Tomcat started on port 1212
+```
+
+More importantly, Hibernate successfully connected to PostgreSQL.
+
+The logs showed:
+```
+HikariPool-1 - Added connection
+```
+
+and:
+```
+Database version: 16.15
+```
+
+This confirmed that the Spring Boot application was successfully communicating with the PostgreSQL database running inside Kubernetes.
+
+---
+
+# 11. Test Banking Application Using Postman
+
+I then used Postman to send requests to the Banking application.
+
+The Banking application created the required `account` table automatically through Hibernate because:
+```
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
+```
+
+I inserted banking account data through the API.
+
+The records were successfully stored in PostgreSQL.
+
+I verified the records directly from the PostgreSQL database:
+```
+SELECT * FROM account;
+```
+
+The database contained the account records inserted through the Banking application.
+
+This demonstrated the complete application flow:
+```
+Postman
+   |
+   ↓
+Banking Service
+   |
+   ↓
+Banking Pod
+   |
+   ↓
+PostgreSQL Service
+   |
+   ↓
+postgres-0
+   |
+   ↓
+PersistentVolume
+```
+
+---
+
+# 12. Test Pod Deletion and Data Persistence
+
+This was the most important part of the homework.
+
+First, I checked the account data:
+```
+SELECT * FROM account;
+```
+
+The records were present.
+
+Then I exited PostgreSQL:
+```
+\q
+```
+
+I deleted the PostgreSQL Pod:
+```
+kubectl delete pod postgres-0
+```
+
+Kubernetes reported:
+```
+pod "postgres-0" deleted
+```
+
+At this point, the PostgreSQL Pod was intentionally deleted.
+
+---
+
+# 13. StatefulSet Automatically Recreates the Pod
+
+I checked the Pods:
+```
+kubectl get pods
+```
+
+A new Pod with the same StatefulSet identity appeared:
+```
+postgres-0    1/1    Running
+```
+
+This demonstrates an important StatefulSet feature:
+
+> Even though the PostgreSQL Pod was deleted, the StatefulSet automatically recreated `postgres-0`.
+
+The Pod was recreated, but the persistent storage remained available.
+
+---
+
+# 14. Verify Data After Pod Recreation
+
+I connected to PostgreSQL again:
+```
+kubectl exec -it postgres-0 -- psql -U postgres -d bankingdatabase
+```
+
+Then I executed:
+```
+SELECT * FROM account;
+```
+
+The same account records were still present.
+
+I also verified the persistence test:
+```
+SELECT * FROM persistence_test;
+```
+
+The previous record was still available:
+```
+id | message
+---+---------------------------
+1  | Data survives pod restart
+```
+
+Therefore, deleting and recreating the PostgreSQL Pod **did not delete the database data**.
+
+---
+
+# 15. Final Kubernetes Architecture
+
+The final setup looks like this:
+```
+                       Kubernetes Cluster
+                              |
+                           Minikube
+                              |
+                       ┌──────┴──────┐
+                       |             |
+                       ↓             ↓
+                 Banking Pod      postgres-0
+                 Spring Boot      PostgreSQL
+                    :1212             :5432
+                       |                |
+                       ↓                ↓
+                Banking Service   postgres Service
+                                        |
+                                        ↓
+                                       PVC
+                                        |
+                                        ↓
+                                       PV
+                                        |
+                                        ↓
+                                Persistent Data
+```
+
+The complete request flow is:
+```
+Postman
+   |
+   ↓
+Banking Service
+   |
+   ↓
+Banking Pod
+   |
+   ↓
+PostgreSQL Service
+   |
+   ↓
+postgres-0
+   |
+   ↓
+PVC
+   |
+   ↓
+PV
+```
+
+---
+
+# Result
+
+The Homework 3 requirement was successfully completed.
+
+### What I implemented
+
+-  Created a PostgreSQL **StatefulSet** 
+-  Created a PostgreSQL **Pod** 
+-  Created a **PersistentVolumeClaim** 
+-  Kubernetes provisioned a **PersistentVolume** 
+-  Created a PostgreSQL **Service** 
+-  Dockerized my existing Spring Boot Banking application 
+-  Deployed the Banking application to Kubernetes 
+-  Connected Spring Boot to PostgreSQL through the Kubernetes Service 
+-  Inserted data through the Banking API using Postman 
+-  Verified the data directly inside PostgreSQL 
+-  Deleted the PostgreSQL Pod 
+-  Allowed the StatefulSet to recreate `postgres-0` 
+-  Verified that the previously stored data was still available 
+
+### Final verification
+```
+Pod deleted
+     ↓
+StatefulSet recreates postgres-0
+     ↓
+PVC remains Bound
+     ↓
+PV remains available
+     ↓
+PostgreSQL starts again
+     ↓
+Previous banking data is still present
+```
+
+**Therefore, the PersistentVolume successfully preserved the PostgreSQL data across Pod deletion and recreation.**
+
+---
+
+## Key Kubernetes concepts learned
+
+Through this homework, I learned how a real backend application can be deployed together with its database in Kubernetes:
+
+| ComponentPurpose |                                             |
+| ---------------- | ------------------------------------------- |
+| **Deployment**   | Manages the Spring Boot Banking application |
+| **StatefulSet**  | Manages the PostgreSQL database Pod         |
+| **Pod**          | Runs the application containers             |
+| **Service**      | Provides stable network access between Pods |
+| **PVC**          | Requests persistent storage                 |
+| **PV**           | Provides the actual persistent storage      |
+| **PostgreSQL**   | Stores the Banking application's data       |
+| **Minikube**     | Provides the local Kubernetes cluster       |
+| **Postman**      | Tests the Banking REST APIs                 |
+
+**This is the main learning outcome of the homework: instead of treating the database as something running separately on my laptop, I deployed the backend and database as Kubernetes workloads and used persistent storage to protect the database data from Pod restarts/recreation.**
