@@ -2963,7 +2963,7 @@ kubectl exec postgres-hw4-2 -- hostname
 
 ---
 
-# 📊 Final Kubernetes Structure
+# Final Kubernetes Structure
 ```
 Minikube Cluster
 │
@@ -2992,7 +2992,7 @@ Minikube Cluster
 
 ---
 
-# 🎯 Conclusion
+# Conclusion
 
 In this homework, I deployed a **PostgreSQL StatefulSet with 3 replicas** and created a **Headless Service**.
 
