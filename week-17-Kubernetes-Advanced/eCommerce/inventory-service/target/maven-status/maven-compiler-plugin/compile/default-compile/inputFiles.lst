@@ -1,0 +1,10 @@
+C:\MySpringProjects\eCommerce\inventory-service\src\main\java\com\codingshuttle\ecommerce\inventory_service\clients\OrdersFeignClient.java
+C:\MySpringProjects\eCommerce\inventory-service\src\main\java\com\codingshuttle\ecommerce\inventory_service\config\AppConfig.java
+C:\MySpringProjects\eCommerce\inventory-service\src\main\java\com\codingshuttle\ecommerce\inventory_service\controller\ProductController.java
+C:\MySpringProjects\eCommerce\inventory-service\src\main\java\com\codingshuttle\ecommerce\inventory_service\dto\OrderRequestDto.java
+C:\MySpringProjects\eCommerce\inventory-service\src\main\java\com\codingshuttle\ecommerce\inventory_service\dto\OrderRequestItemDto.java
+C:\MySpringProjects\eCommerce\inventory-service\src\main\java\com\codingshuttle\ecommerce\inventory_service\dto\ProductDto.java
+C:\MySpringProjects\eCommerce\inventory-service\src\main\java\com\codingshuttle\ecommerce\inventory_service\entity\Product.java
+C:\MySpringProjects\eCommerce\inventory-service\src\main\java\com\codingshuttle\ecommerce\inventory_service\InventoryServiceApplication.java
+C:\MySpringProjects\eCommerce\inventory-service\src\main\java\com\codingshuttle\ecommerce\inventory_service\repository\ProductRepository.java
+C:\MySpringProjects\eCommerce\inventory-service\src\main\java\com\codingshuttle\ecommerce\inventory_service\service\ProductService.java

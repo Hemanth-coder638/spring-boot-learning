@@ -1,0 +1,5 @@
+com\codingshuttle\ecommerce\shipping_service\clients\ShippingOrderClient.class
+com\codingshuttle\ecommerce\shipping_service\ShippingServiceApplication.class
+com\codingshuttle\ecommerce\shipping_service\controller\ShippingTestController.class
+com\codingshuttle\ecommerce\shipping_service\service\ShippingService.class
+com\codingshuttle\ecommerce\shipping_service\dto\OrderRequestDto.class

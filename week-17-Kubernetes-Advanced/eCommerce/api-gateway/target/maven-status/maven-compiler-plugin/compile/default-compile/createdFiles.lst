@@ -1,0 +1,12 @@
+com\codingshuttle\ecommerce\api_gateway\filters\AuthenticationGatewayFilterFactory$Config.class
+com\codingshuttle\ecommerce\api_gateway\ApiGatewayApplication.class
+com\codingshuttle\ecommerce\api_gateway\filters\AuthorizationGatewayFilterFactory.class
+com\codingshuttle\ecommerce\api_gateway\service\JwtService.class
+com\codingshuttle\ecommerce\api_gateway\filters\GlobalLoggingFilter.class
+com\codingshuttle\ecommerce\api_gateway\filters\AuthenticationGatewayFilterFactory.class
+com\codingshuttle\ecommerce\api_gateway\filters\LoggingOrdersFilter.class
+com\codingshuttle\ecommerce\api_gateway\filters\LoggingOrdersFilter$Config.class
+com\codingshuttle\ecommerce\api_gateway\controller\TokenGenerator.class
+com\codingshuttle\ecommerce\api_gateway\config\AppConfig.class
+com\codingshuttle\ecommerce\api_gateway\filters\AuthorizationGatewayFilterFactory$Config.class
+com\codingshuttle\ecommerce\api_gateway\dto\TokenGenerateDto.class

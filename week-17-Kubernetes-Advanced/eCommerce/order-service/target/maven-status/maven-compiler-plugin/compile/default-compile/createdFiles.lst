@@ -1,0 +1,14 @@
+com\codingshuttle\ecommerce\order_service\service\OrdersService.class
+com\codingshuttle\ecommerce\order_service\controller\OrdersController.class
+com\codingshuttle\ecommerce\order_service\clients\InventoryOpenFeignClient.class
+com\codingshuttle\ecommerce\order_service\entity\OrderItem.class
+com\codingshuttle\ecommerce\order_service\clients\ShippingOpenFeignClient.class
+com\codingshuttle\ecommerce\order_service\config\FeaturesEnableConfig.class
+com\codingshuttle\ecommerce\order_service\OrderServiceApplication.class
+com\codingshuttle\ecommerce\order_service\entity\OrderStatus.class
+com\codingshuttle\ecommerce\order_service\entity\Orders.class
+com\codingshuttle\ecommerce\order_service\dto\OrderRequestItemDto.class
+com\codingshuttle\ecommerce\order_service\repoitory\OrdersRepository.class
+com\codingshuttle\ecommerce\order_service\service\ShippingCheckService.class
+com\codingshuttle\ecommerce\order_service\config\AppConfig.class
+com\codingshuttle\ecommerce\order_service\dto\OrderRequestDto.class

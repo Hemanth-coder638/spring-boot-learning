@@ -1,0 +1,9 @@
+C:\MySpringProjects\eCommerce\api-gateway\src\main\java\com\codingshuttle\ecommerce\api_gateway\ApiGatewayApplication.java
+C:\MySpringProjects\eCommerce\api-gateway\src\main\java\com\codingshuttle\ecommerce\api_gateway\config\AppConfig.java
+C:\MySpringProjects\eCommerce\api-gateway\src\main\java\com\codingshuttle\ecommerce\api_gateway\controller\TokenGenerator.java
+C:\MySpringProjects\eCommerce\api-gateway\src\main\java\com\codingshuttle\ecommerce\api_gateway\dto\TokenGenerateDto.java
+C:\MySpringProjects\eCommerce\api-gateway\src\main\java\com\codingshuttle\ecommerce\api_gateway\filters\AuthenticationGatewayFilterFactory.java
+C:\MySpringProjects\eCommerce\api-gateway\src\main\java\com\codingshuttle\ecommerce\api_gateway\filters\AuthorizationGatewayFilterFactory.java
+C:\MySpringProjects\eCommerce\api-gateway\src\main\java\com\codingshuttle\ecommerce\api_gateway\filters\GlobalLoggingFilter.java
+C:\MySpringProjects\eCommerce\api-gateway\src\main\java\com\codingshuttle\ecommerce\api_gateway\filters\LoggingOrdersFilter.java
+C:\MySpringProjects\eCommerce\api-gateway\src\main\java\com\codingshuttle\ecommerce\api_gateway\service\JwtService.java

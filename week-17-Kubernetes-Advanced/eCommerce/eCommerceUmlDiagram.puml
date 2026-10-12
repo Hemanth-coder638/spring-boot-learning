@@ -1,0 +1,161 @@
+@startuml
+class com.codingshuttle.ecommerce.inventory_service.controller.ProductController {
+- ProductService productService
+- DiscoveryClient discoveryClient
+- RestClient restClient
+- OrdersFeignClient ordersFeignClient
++ String fetchFromOrdersService(HttpServletRequest)
++ ResponseEntity<List<ProductDto>> getAllInventory()
++ ResponseEntity<ProductDto> getInventoryById(Long)
++ ResponseEntity<Double> reduceStocks(OrderRequestDto)
++ ResponseEntity<Double> restoreStocks(OrderRequestDto)
+}
+
+
+class com.codingshuttle.ecommerce.api_gateway.ApiGatewayApplicationTests {
+~ void contextLoads()
+}
+
+class com.codingshuttle.ecommerce.order_service.dto.OrderRequestItemDto {
+- Long id
+- Long productId
+- Integer quantity
+}
+
+class com.codingshuttle.ecommerce.order_service.entity.OrderItem {
+- Long id
+- Long productId
+- Integer quantity
+- Orders order
+}
+
+interface com.codingshuttle.ecommerce.inventory_service.clients.OrdersFeignClient {
+~ String helloOrders()
+}
+
+class com.codingshuttle.ecommerce.discovery_service.DiscoveryServiceApplication {
++ {static} void main(String[])
+}
+
+interface com.codingshuttle.ecommerce.order_service.clients.InventoryOpenFeignClient {
+~ Double reduceStocks(OrderRequestDto)
+~ Double restoreStocks(OrderRequestDto)
+}
+
+class com.codingshuttle.ecommerce.inventory_service.config.AppConfig {
++ ModelMapper modelMapper()
++ RestClient restClient()
+}
+
+class com.codingshuttle.ecommerce.order_service.entity.Orders {
+- Long id
+- OrderStatus orderStatus
+- Double totalPrice
+- List<OrderItem> items
+}
+
+class com.codingshuttle.ecommerce.api_gateway.ApiGatewayApplication {
++ {static} void main(String[])
+}
+
+class com.codingshuttle.ecommerce.discovery_service.DiscoveryServiceApplicationTests {
+~ void contextLoads()
+}
+
+class com.codingshuttle.ecommerce.inventory_service.entity.Product {
+- Long id
+- String name
+- Double price
+- Integer stock
+}
+
+class com.codingshuttle.ecommerce.inventory_service.service.ProductService {
+- ProductRepository productRepository
+- ModelMapper modelMapper
++ List<ProductDto> getAllInventory()
++ ProductDto getProductById(Long)
++ Double reduceStocks(OrderRequestDto)
++ Double restoreStocks(OrderRequestDto)
+}
+
+
+class com.codingshuttle.ecommerce.order_service.dto.OrderRequestDto {
+- Long id
+- List<OrderRequestItemDto> items
+- BigDecimal totalPrice
+}
+
+class com.codingshuttle.ecommerce.inventory_service.dto.OrderRequestItemDto {
+- Long productId
+- Integer quantity
+}
+
+class com.codingshuttle.ecommerce.order_service.OrdersServiceApplicationTests {
+~ void contextLoads()
+}
+
+interface com.codingshuttle.ecommerce.order_service.repoitory.OrdersRepository {
+}
+interface com.codingshuttle.ecommerce.inventory_service.repository.ProductRepository {
+}
+class com.codingshuttle.ecommerce.inventory_service.InventoryServiceApplicationTests {
+~ void contextLoads()
+}
+
+enum com.codingshuttle.ecommerce.order_service.entity.OrderStatus {
++  CONFIRMED
++  CANCELLED
++  PENDING
++  DELIVERED
+}
+
+class com.codingshuttle.ecommerce.order_service.OrderServiceApplication {
++ {static} void main(String[])
+}
+
+class com.codingshuttle.ecommerce.inventory_service.InventoryServiceApplication {
++ {static} void main(String[])
+}
+
+class com.codingshuttle.ecommerce.order_service.controller.OrdersController {
+- OrdersService orderService
++ String helloOrders()
++ ResponseEntity<OrderRequestDto> createOrder(OrderRequestDto)
++ ResponseEntity<List<OrderRequestDto>> getAllOrders(HttpServletRequest)
++ ResponseEntity<OrderRequestDto> getOrderById(Long)
++ ResponseEntity<OrderRequestDto> cancelOrder(Long)
+}
+
+
+class com.codingshuttle.ecommerce.order_service.config.AppConfig {
++ ModelMapper modelMapper()
+}
+
+class com.codingshuttle.ecommerce.inventory_service.dto.ProductDto {
+- Long id
+- String name
+- Double price
+- Integer stock
+}
+
+class com.codingshuttle.ecommerce.inventory_service.dto.OrderRequestDto {
+- List<OrderRequestItemDto> items
+}
+
+class com.codingshuttle.ecommerce.order_service.service.OrdersService {
+- OrdersRepository orderRepository
+- ModelMapper modelMapper
+- InventoryOpenFeignClient inventoryOpenFeignClient
++ List<OrderRequestDto> getAllOrders()
++ OrderRequestDto getOrderById(Long)
++ OrderRequestDto createOrder(OrderRequestDto)
++ OrderRequestDto cancelOrder(Long)
++ OrderRequestDto createOrderFallback(OrderRequestDto,Throwable)
+}
+
+
+
+
+org.springframework.data.jpa.repository.JpaRepository <|-- com.codingshuttle.ecommerce.order_service.repoitory.OrdersRepository
+org.springframework.data.jpa.repository.JpaRepository <|-- com.codingshuttle.ecommerce.inventory_service.repository.ProductRepository
+@enduml

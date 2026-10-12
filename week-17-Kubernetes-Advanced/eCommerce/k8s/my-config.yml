@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-config
+data:
+  PG_DATA: /var/lib/postgresql/data/pgdata
+  INVENTORY_DB_SERVICE: inventory-db-service
+  ORDER_DB_SERVICE: order-db-service

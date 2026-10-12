@@ -1,0 +1,11 @@
+com\codingshuttle\ecommerce\inventory_service\dto\ProductDto.class
+com\codingshuttle\ecommerce\inventory_service\clients\OrdersFeignClient.class
+com\codingshuttle\ecommerce\inventory_service\entity\Product$ProductBuilder.class
+com\codingshuttle\ecommerce\inventory_service\entity\Product.class
+com\codingshuttle\ecommerce\inventory_service\dto\OrderRequestDto.class
+com\codingshuttle\ecommerce\inventory_service\repository\ProductRepository.class
+com\codingshuttle\ecommerce\inventory_service\config\AppConfig.class
+com\codingshuttle\ecommerce\inventory_service\dto\OrderRequestItemDto.class
+com\codingshuttle\ecommerce\inventory_service\controller\ProductController.class
+com\codingshuttle\ecommerce\inventory_service\InventoryServiceApplication.class
+com\codingshuttle\ecommerce\inventory_service\service\ProductService.class

@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: order-db
+spec:
+  selector:
+    matchLabels:
+      app: order-db
+  serviceName: order-db-service
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: order-db
+    spec:
+      containers:
+      - name: order-db
+        image: postgres:16 
+        resources:
+          limits:
+              memory: "200Mi"
+              cpu: "200m"
+          requests:
+            memory: "100Mi"
+            cpu: "100m"
+        env:
+         - name: POSTGRES_USER
+           valueFrom:
+             secretKeyRef:
+               name: my-secret
+               key: ORDER_DB_USER
+
+         - name: POSTGRES_PASSWORD
+           valueFrom:
+             secretKeyRef:
+               name: my-secret
+               key: ORDER_DB_PASSWORD
+
+         - name: POSTGRES_DB
+           valueFrom:
+             secretKeyRef:
+               name: my-secret
+               key: ORDER_DB_NAME
+
+         - name: PGDATA
+           valueFrom:
+             configMapKeyRef:
+               name: my-config
+               key: PG_DATA
+               
+        ports:
+        - containerPort: 5432
+          name: postgres
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: "civo-volume"
+      volumeMode: Filesystem
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-db-service
+spec:
+  clusterIP: None
+  selector:
+    app: order-db
+  ports:
+  - port: 5432
+    targetPort: 5432

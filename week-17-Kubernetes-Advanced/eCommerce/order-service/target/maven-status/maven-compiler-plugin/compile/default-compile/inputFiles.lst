@@ -1,0 +1,14 @@
+C:\MySpringProjects\eCommerce\order-service\src\main\java\com\codingshuttle\ecommerce\order_service\clients\InventoryOpenFeignClient.java
+C:\MySpringProjects\eCommerce\order-service\src\main\java\com\codingshuttle\ecommerce\order_service\clients\ShippingOpenFeignClient.java
+C:\MySpringProjects\eCommerce\order-service\src\main\java\com\codingshuttle\ecommerce\order_service\config\AppConfig.java
+C:\MySpringProjects\eCommerce\order-service\src\main\java\com\codingshuttle\ecommerce\order_service\config\FeaturesEnableConfig.java
+C:\MySpringProjects\eCommerce\order-service\src\main\java\com\codingshuttle\ecommerce\order_service\controller\OrdersController.java
+C:\MySpringProjects\eCommerce\order-service\src\main\java\com\codingshuttle\ecommerce\order_service\dto\OrderRequestDto.java
+C:\MySpringProjects\eCommerce\order-service\src\main\java\com\codingshuttle\ecommerce\order_service\dto\OrderRequestItemDto.java
+C:\MySpringProjects\eCommerce\order-service\src\main\java\com\codingshuttle\ecommerce\order_service\entity\OrderItem.java
+C:\MySpringProjects\eCommerce\order-service\src\main\java\com\codingshuttle\ecommerce\order_service\entity\Orders.java
+C:\MySpringProjects\eCommerce\order-service\src\main\java\com\codingshuttle\ecommerce\order_service\entity\OrderStatus.java
+C:\MySpringProjects\eCommerce\order-service\src\main\java\com\codingshuttle\ecommerce\order_service\OrderServiceApplication.java
+C:\MySpringProjects\eCommerce\order-service\src\main\java\com\codingshuttle\ecommerce\order_service\repoitory\OrdersRepository.java
+C:\MySpringProjects\eCommerce\order-service\src\main\java\com\codingshuttle\ecommerce\order_service\service\OrdersService.java
+C:\MySpringProjects\eCommerce\order-service\src\main\java\com\codingshuttle\ecommerce\order_service\service\ShippingCheckService.java
