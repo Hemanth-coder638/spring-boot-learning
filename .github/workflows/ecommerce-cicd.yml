@@ -1,0 +1,161 @@
+
+name: eCommerce CI/CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "week-17-Kubernetes-Advanced/eCommerce/**"
+      - ".github/workflows/ecommerce-cicd.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ecommerce-cicd
+  cancel-in-progress: false
+
+jobs:
+  build-and-push:
+    name: Build and publish ${{ matrix.service }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - api-gateway
+          - config-server
+          - inventory-service
+          - order-service
+          - shipping-service
+
+    defaults:
+      run:
+        shell: bash
+        working-directory: week-17-Kubernetes-Advanced/eCommerce
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Test service
+        run: |
+          mvn -B -ntp -f "${{ matrix.service }}/pom.xml" test
+
+      - name: Build and push Docker image with Jib
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          mvn -B -ntp \
+            -f "${{ matrix.service }}/pom.xml" \
+            -DskipTests \
+            "-Djib.to.image=docker.io/hemanths5454/ecommerce-${{ matrix.service }}:${IMAGE_TAG}" \
+            "-Djib.to.tags=latest" \
+            "-Djib.to.auth.username=${DOCKERHUB_USERNAME}" \
+            "-Djib.to.auth.password=${DOCKERHUB_TOKEN}" \
+            compile jib:build
+
+  deploy:
+    name: Deploy to Civo Kubernetes
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: "latest"
+
+      - name: Configure Civo cluster access
+        env:
+          CIVO_KUBECONFIG_B64: ${{ secrets.CIVO_KUBECONFIG_B64 }}
+        run: |
+          set -euo pipefail
+
+          mkdir -p "$HOME/.kube"
+          echo "$CIVO_KUBECONFIG_B64" | base64 --decode \
+            > "$HOME/.kube/config"
+          chmod 600 "$HOME/.kube/config"
+
+          kubectl config current-context
+          kubectl get deployments
+
+      - name: Deploy Config Server
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          kubectl set image deployment/config-server \
+            config-server="docker.io/hemanths5454/ecommerce-config-server:${IMAGE_TAG}"
+
+          kubectl rollout status deployment/config-server \
+            --timeout=180s
+
+      - name: Deploy Inventory Service
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          kubectl set image deployment/inventory-service \
+            inventory-service="docker.io/hemanths5454/ecommerce-inventory-service:${IMAGE_TAG}"
+
+          kubectl rollout status deployment/inventory-service \
+            --timeout=180s
+
+      - name: Deploy Order Service
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          kubectl set image deployment/order-service \
+            order-service="docker.io/hemanths5454/ecommerce-order-service:${IMAGE_TAG}"
+
+          kubectl rollout status deployment/order-service \
+            --timeout=180s
+
+      - name: Deploy Shipping Service
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          kubectl set image deployment/shipping-service \
+            shipping-service="docker.io/hemanths5454/ecommerce-shipping-service:${IMAGE_TAG}"
+
+          kubectl rollout status deployment/shipping-service \
+            --timeout=180s
+
+      - name: Deploy API Gateway
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          kubectl set image deployment/api-gateway \
+            api-gateway="docker.io/hemanths5454/ecommerce-api-gateway:${IMAGE_TAG}"
+
+          kubectl rollout status deployment/api-gateway \
+            --timeout=180s
+
+      - name: Verify deployments
+        run: |
+          kubectl get deployments -o wide
+          kubectl get pods
