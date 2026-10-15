@@ -1,3 +1,4 @@
+
 name: eCommerce CI/CD
 
 on:
@@ -76,11 +77,40 @@ jobs:
           cat /tmp/discovery-service.log
           exit 1
 
+      - name: Start Config Server for CI tests
+        if: matrix.service != 'discovery-service' && matrix.service != 'config-server'
+        run: |
+          set -euo pipefail
+
+          mvn -B -ntp \
+            -f config-server/pom.xml \
+            -DskipTests \
+            spring-boot:run \
+            -Dspring-boot.run.profiles=local \
+            > /tmp/config-server.log 2>&1 &
+
+          for i in {1..90}; do
+            if curl -fsS \
+              http://localhost:8888/order-service/default \
+              -o /tmp/order-config.json; then
+              echo "Config Server returned order-service configuration."
+              exit 0
+            fi
+
+            sleep 2
+          done
+
+          echo "Config Server failed to start or load configuration."
+          echo "Config Server logs:"
+          cat /tmp/config-server.log
+          exit 1
+
       - name: Test service
         env:
           SPRING_PROFILES_ACTIVE: local
         run: |
           set -euo pipefail
+
           mvn -B -ntp \
             -f "${{ matrix.service }}/pom.xml" \
             test
