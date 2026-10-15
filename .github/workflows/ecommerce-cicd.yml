@@ -48,12 +48,42 @@ jobs:
           java-version: "21"
           cache: maven
 
+      - name: Start Eureka for CI tests
+        if: matrix.service != 'discovery-service'
+        run: |
+          set -euo pipefail
+
+          mvn -B -ntp \
+            -f discovery-service/pom.xml \
+            -DskipTests \
+            spring-boot:run \
+            -Dspring-boot.run.profiles=local \
+            > /tmp/discovery-service.log 2>&1 &
+
+          for i in {1..60}; do
+            if curl -fsS \
+              -H "Accept: application/json" \
+              http://localhost:8761/eureka/apps \
+              > /dev/null; then
+              echo "Eureka is ready on port 8761"
+              exit 0
+            fi
+
+            sleep 2
+          done
+
+          echo "Eureka failed to start. Logs:"
+          cat /tmp/discovery-service.log
+          exit 1
+
       - name: Test service
         env:
           SPRING_PROFILES_ACTIVE: local
         run: |
           set -euo pipefail
-          mvn -B -ntp -f "${{ matrix.service }}/pom.xml" test
+          mvn -B -ntp \
+            -f "${{ matrix.service }}/pom.xml" \
+            test
 
       - name: Build and push Docker image with Jib
         if: matrix.service != 'discovery-service'
