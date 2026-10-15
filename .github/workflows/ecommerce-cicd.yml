@@ -1,4 +1,3 @@
-```yaml
 name: eCommerce CI/CD
 
 on:
@@ -162,4 +161,3 @@ jobs:
         run: |
           kubectl get deployments -o wide
           kubectl get pods
-```
