@@ -1,4 +1,3 @@
-
 name: eCommerce CI/CD
 
 on:
@@ -21,6 +20,21 @@ jobs:
   build-and-push:
     name: Build and publish ${{ matrix.service }}
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: "7878"
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     strategy:
       fail-fast: false
@@ -48,6 +62,34 @@ jobs:
           distribution: temurin
           java-version: "21"
           cache: maven
+
+      - name: Create CI databases
+        run: |
+          set -euo pipefail
+
+          for i in {1..30}; do
+            if PGPASSWORD=7878 psql \
+              -h localhost \
+              -p 5432 \
+              -U postgres \
+              -d postgres \
+              -c "SELECT 1" > /dev/null 2>&1; then
+              break
+            fi
+            sleep 2
+          done
+
+          PGPASSWORD=7878 psql \
+            -h localhost -p 5432 -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 \
+            -c "CREATE DATABASE \"orderDB\";" \
+            || echo "orderDB already exists"
+
+          PGPASSWORD=7878 psql \
+            -h localhost -p 5432 -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 \
+            -c "CREATE DATABASE \"inventoryDB\";" \
+            || echo "inventoryDB already exists"
 
       - name: Start Eureka for CI tests
         if: matrix.service != 'discovery-service'
@@ -108,8 +150,15 @@ jobs:
       - name: Test service
         env:
           SPRING_PROFILES_ACTIVE: local
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/orderDB
+          SPRING_DATASOURCE_USERNAME: postgres
+          SPRING_DATASOURCE_PASSWORD: "7878"
         run: |
           set -euo pipefail
+
+          if [ "${{ matrix.service }}" = "inventory-service" ]; then
+            export SPRING_DATASOURCE_URL="jdbc:postgresql://localhost:5432/inventoryDB"
+          fi
 
           mvn -B -ntp \
             -f "${{ matrix.service }}/pom.xml" \
