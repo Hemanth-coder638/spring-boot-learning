@@ -13,10 +13,12 @@ spring:
 #spring:
 #  application:
 #    name: inventory-service
+#
 #  datasource:
 #    url: jdbc:postgresql://localhost:5432/inventoryDB
 #    username: postgres
 #    password: 7878
+#    driver-class-name: org.postgresql.Driver
 #
 #  jpa:
 #    hibernate:
@@ -32,10 +34,17 @@ spring:
 #      mode: always
 #      data-locations: classpath:data.sql
 #
+#management:
+#  tracing:
+#    sampling:
+#      probability: 1.0
+#  zipkin:
+#    tracing:
+#      endpoint: http://localhost:9411/api/v2/spans
+#
 #eureka:
 #  client:
 #    service-url:
 #      defaultZone: http://localhost:8761/eureka
-#instance:
+#  instance:
 #    prefer-ip-address: true
-#    instance-id: ${spring.application.name}:${server.port}

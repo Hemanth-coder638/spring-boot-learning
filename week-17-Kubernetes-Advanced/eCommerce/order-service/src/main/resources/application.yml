@@ -7,12 +7,13 @@ spring:
 #github:
 #  config:
 #    test:
-#      variable: success
+#      variable: 👉 CONFIG VALUE CHAGED TO TEST REFRESHSCOPE DEFINED IN ORDER CONTROLLER 👈
+#
 #server:
 #  servlet:
 #    context-path: /orders
 #  port: 9021
-
+#
 #spring:
 #  application:
 #    name: order-service
@@ -31,9 +32,15 @@ spring:
 #        format_sql: true
 #
 #management:
+#  tracing:
+#    sampling:
+#      probability: 1.0
 #  health:
-#  circuitbreakers:
-#  enabled: true
+#    circuitbreakers:
+#      enabled: true
+#  zipkin:
+#    tracing:
+#      endpoint: http://localhost:9411/api/v2/spans
 #
 #resilience4j:
 #  retry:
