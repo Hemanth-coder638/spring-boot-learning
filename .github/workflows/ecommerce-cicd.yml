@@ -25,6 +25,7 @@ jobs:
       fail-fast: false
       matrix:
         service:
+          - discovery-service
           - api-gateway
           - config-server
           - inventory-service
@@ -53,14 +54,6 @@ jobs:
         run: |
           set -euo pipefail
           mvn -B -ntp -f "${{ matrix.service }}/pom.xml" test
-    
-      - name: Compile and package service (tests skipped temporarily)
-        run: |
-          set -euo pipefail
-          mvn -B -ntp \
-            -f "${{ matrix.service }}/pom.xml" \
-            -DskipTests \
-            package
 
       - name: Build and push Docker image with Jib
         env:
