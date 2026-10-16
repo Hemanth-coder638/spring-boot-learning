@@ -56,7 +56,9 @@ public class ProductController {
 
     @PutMapping("reduce-stocks")
     public ResponseEntity<Double> reduceStocks(@RequestBody OrderRequestDto orderRequestDto) {
+        log.info("received reducestock request from order-service from fiegn client");
         Double totalPrice = productService.reduceStocks(orderRequestDto);
+        log.info("reducestock happened successfully");
         return ResponseEntity.ok(totalPrice);
     }
 
