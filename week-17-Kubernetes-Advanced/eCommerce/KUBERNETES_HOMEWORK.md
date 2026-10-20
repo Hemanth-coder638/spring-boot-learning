@@ -374,6 +374,161 @@ The core concepts remain the same across Kubernetes providers. However, the imag
 
 A Pod showing `Running` does not automatically prove that the entire application is working correctly. I must also check container readiness, service connectivity, application logs, API responses, and database operations.
 
+## 17.4 Ingress Endpoints in Kubernetes And Deploying Microservices on Civo Kubernetes
+
+https://github.com/user-attachments/assets/d563bcb7-55d6-4af8-a0ad-557a375b4f80
+
+### 1. Workflow — What I Did in This Recording
+
+In this recording, I switched my deployment environment from Google Kubernetes Engine (GKE) to Civo Kubernetes because I wanted to continue the project without depending on my previous Google Cloud credits. I then configured local Kubernetes access, deployed the required resources, and verified the eCommerce microservices.
+
+**Step 1: Open the Civo Kubernetes Cluster**
+
+First, I opened the Civo dashboard and accessed my Kubernetes cluster named `ecommerce-cluster`.
+
+I checked the cluster information, including its Kubernetes version, node pool, API endpoint, and kubeconfig download option.
+
+I downloaded the kubeconfig file so that my Windows machine could communicate with the Civo cluster using `kubectl`.
+
+**Step 2: Configure the kubeconfig File**
+
+Next, I opened PowerShell and configured the `KUBECONFIG` environment variable to point to my downloaded Civo configuration file.
+
+```powershell
+$env:KUBECONFIG="C:\Users\HP\Downloads\civo-ecommerce-cluster-kubeconfig"
+```
+
+I initially encountered a PowerShell variable syntax error and corrected the command. After that, I checked the environment variable value.
+
+This configuration tells `kubectl` which Kubernetes connection configuration to use in the current PowerShell session.
+
+**Step 3: Verify the Kubernetes Node**
+
+I ran:
+
+```bash
+kubectl get nodes
+```
+
+The output showed my Civo Kubernetes node in the `Ready` state.
+
+This confirmed that my local Kubernetes client could communicate with the cluster and that the node was available to run workloads.
+
+**Step 4: Open the Kubernetes Configuration Directory**
+
+I navigated to my project's Kubernetes manifest directory:
+
+```powershell
+cd C:\MySpringProjects\eCommerce\k8s
+```
+
+Then I ran:
+
+```powershell
+dir
+```
+
+This displayed my Kubernetes YAML files, including the configurations for the API Gateway, Config Server, Inventory Service, Order Service, Shipping Service, database StatefulSets, Ingress, and Zipkin.
+
+**Step 5: Apply the Order Database Configuration**
+
+I applied the Order Database manifest:
+
+```bash
+kubectl apply -f order-db.yml
+```
+
+Kubernetes created the `order-db` StatefulSet and `order-db-service` Service.
+
+I then checked the Pods and Services:
+
+```bash
+kubectl get pods
+kubectl get svc
+```
+
+The Order Database Pod initially showed `Pending`. This demonstrated that creating a Kubernetes resource does not guarantee that its Pod becomes ready immediately. Kubernetes still needs to schedule the Pod and make its required storage and resources available.
+
+**Step 6: Verify the Application Resources**
+
+I continued checking the Kubernetes resources using:
+
+```bash
+kubectl get pods
+kubectl get svc
+kubectl get ingress
+kubectl get nodes
+```
+
+These commands allowed me to verify the status of the Pods, internal Services, Ingress configuration, and cluster node.
+
+In the later output, the API Gateway, Config Server, Inventory Service, Order Service, Shipping Service, database Pods, and Zipkin Pod were shown as running and ready.
+
+I also checked the Kubernetes Services and confirmed that the microservices had internal cluster IP addresses and the expected ports.
+
+**Step 7: Verify the Ingress Configuration**
+
+I checked the Ingress resource:
+
+```bash
+kubectl get ingress
+```
+
+The output showed the `myingress` resource using Traefik and a Civo Kubernetes hostname.
+
+Ingress provides an entry point for external HTTP traffic. The configured Ingress rules determine how requests are routed to the appropriate Kubernetes Services.
+
+**Step 8: Check the Application Logs and Resource Status**
+
+I inspected the terminal output while checking the application resources and service startup logs.
+
+This helped me understand how to troubleshoot a Kubernetes deployment by checking Pod status, readiness, restarts, and application startup messages rather than relying only on whether a Deployment was created.
+
+**Step 9: Confirm the Deployment in the Civo Dashboard**
+
+Finally, I returned to the Civo dashboard and checked the cluster and node-pool information.
+
+This completed the transition to using Civo Kubernetes for my project and confirmed that I could manage the cluster through both the Civo dashboard and local Kubernetes command-line tools.
+
+### 2. Quick Technical Definitions
+
+| Term | Simple Definition |
+|---|---|
+| Civo Kubernetes | A managed Kubernetes service that provides a cluster for running containerized applications. |
+| Cloud Provider | A company that provides cloud infrastructure and services, such as compute, storage, and managed Kubernetes. |
+| Kubernetes Cluster | A group of Kubernetes control-plane and worker resources used to run applications. |
+| Node | A machine in a Kubernetes cluster that runs Pods. |
+| `Ready` Node | A node that Kubernetes considers healthy and available to run workloads. |
+| kubeconfig | A configuration file containing cluster connection details, credentials, and contexts. |
+| `KUBECONFIG` | An environment variable that can tell Kubernetes client tools which configuration file to use. |
+| PowerShell | A command-line shell and scripting environment available on Windows. |
+| `kubectl` | The command-line tool used to communicate with Kubernetes clusters. |
+| `kubectl get nodes` | Lists the nodes in the currently selected Kubernetes cluster. |
+| `kubectl apply -f` | Creates or updates Kubernetes resources from a manifest file. |
+| StatefulSet | A Kubernetes workload controller for applications that need stable Pod identities and persistent storage. |
+| Deployment | A Kubernetes resource that manages application Pods and their updates. |
+| Service | A stable network endpoint used to access selected Pods. |
+| ClusterIP | The default Service type, providing an internal cluster network endpoint. |
+| Pod | The smallest deployable Kubernetes unit, containing one or more containers. |
+| `Pending` Pod | A Pod that has not yet been scheduled successfully or has not completed the steps required to start. |
+| `Running` Pod | A Pod whose containers have been created and are running, though readiness should still be checked separately. |
+| Readiness | Indicates whether a container is ready to serve requests according to its readiness checks. |
+| Restart Count | The number of times a container in a Pod has restarted. |
+| Ingress | A Kubernetes resource that defines rules for routing external HTTP or HTTPS traffic to Services. |
+| Traefik | An ingress controller and reverse proxy that can route incoming traffic to Kubernetes Services. |
+| Ingress Hostname | A hostname used to reach an application through the configured Ingress. |
+| Internal Service IP | A cluster network address used to access a Kubernetes Service internally. |
+| Port Mapping | The configuration that connects traffic on a particular network port to an application or Service port. |
+| Resource Scheduling | Kubernetes' process of choosing a suitable node for a Pod based on its requirements and cluster availability. |
+
+### Important Note
+
+This recording demonstrates the move to Civo Kubernetes and the deployment checks performed on the cluster. My final Week 17 eCommerce project uses **Civo Kubernetes**, not GKE.
+
+The exact cluster name, kubeconfig path, hostname, storage configuration, and node details are specific to my environment. The Kubernetes concepts remain applicable to other cloud providers.
+
+Also, a Pod being `Running` does not necessarily mean the application is fully functional. I must verify readiness, application logs, service connectivity, API responses, and database operations.
+
 
 
 
