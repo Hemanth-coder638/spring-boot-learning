@@ -529,6 +529,517 @@ The exact cluster name, kubeconfig path, hostname, storage configuration, and no
 
 Also, a Pod being `Running` does not necessarily mean the application is fully functional. I must verify readiness, application logs, service connectivity, API responses, and database operations.
 
+## 17.5 Secure Kubernetes Secrets Using Doppler and External Secrets Operator
+
+https://github.com/user-attachments/assets/a8a48de6-511e-47a7-807a-b0c42737ede8
+
+### 1. Workflow — What I Did in This Recording
+
+In this recording, I worked on securely managing database credentials and application secrets in Kubernetes. Instead of keeping sensitive values directly inside Kubernetes application manifests, I configured Doppler and External Secrets Operator to synchronize secrets into Kubernetes.
+
+**Step 1: Configure Database Credentials in Kubernetes Manifests**
+
+First, I inspected the PostgreSQL StatefulSet YAML files, including `order-db.yml` and `inventory-db.yml`.
+
+These manifests configure the database containers, environment variables, database ports, and persistent storage. The databases require credentials such as usernames and passwords to initialize and operate.
+
+Hardcoding real passwords directly into YAML files is not a good security practice because these files may be committed to GitHub.
+
+**Step 2: Configure Doppler**
+
+Next, I opened the Doppler dashboard and accessed my eCommerce project's secret configuration.
+
+Doppler is a secrets management platform that stores sensitive configuration values, such as database passwords, API keys, and application credentials.
+
+I configured the secrets required by my application in Doppler so that Kubernetes could obtain them through the external-secrets integration.
+
+**Step 3: Configure External Secrets Operator**
+
+I worked with the Kubernetes resources used by External Secrets Operator.
+
+External Secrets Operator connects Kubernetes to an external secret management system. In my setup, it retrieves secrets from Doppler and creates or updates Kubernetes Secrets.
+
+The important resources are:
+
+- **SecretStore:** Defines how External Secrets Operator connects to a secret provider.
+- **ExternalSecret:** Defines which external secrets to retrieve and how to create the corresponding Kubernetes Secret.
+
+**Step 4: Configure the ExternalSecret Manifest**
+
+I inspected the `order-external-secret.yml` manifest.
+
+This manifest defines an `ExternalSecret` named `order-external-secret`. It references the configured secret store and maps external secret values into a Kubernetes Secret.
+
+For example, database configuration values can include:
+
+- `ORDER_DB_NAME`
+- `ORDER_DB_USERNAME`
+- `ORDER_DB_PASSWORD`
+
+The external secret configuration specifies which values to retrieve and how they should appear in the resulting Kubernetes Secret.
+
+**Step 5: Apply the ExternalSecret Configuration**
+
+I used `kubectl` to apply the ExternalSecret manifest:
+
+```bash
+kubectl apply -f order-external-secret.yml
+```
+
+I then checked the external-secret resources and their synchronization status.
+
+The recording shows that I encountered synchronization or reconciliation errors while configuring the secret integration. These errors indicate that applying the YAML file alone does not guarantee that the external secret has been retrieved successfully.
+
+The provider connection, secret names, permissions, and manifest configuration must all be correct for synchronization to succeed.
+
+**Step 6: Inspect the ExternalSecret Status**
+
+I used commands such as:
+
+```bash
+kubectl get externalsecret
+kubectl describe externalsecret order-external-secret
+```
+
+The first command lists ExternalSecret resources. The second displays detailed information, including conditions and events that help identify synchronization problems.
+
+I inspected the status and event messages to troubleshoot the integration.
+
+**Step 7: Verify the Resulting Kubernetes Secret**
+
+Once the configuration is correct and synchronization succeeds, External Secrets Operator creates the Kubernetes Secret referenced by the application.
+
+I can verify the Secret resource using:
+
+```bash
+kubectl get secrets
+```
+
+To inspect only the names of the keys in a Secret without printing their values, I can use:
+
+```bash
+kubectl get secret order-external-secret -o json
+```
+
+The JSON output contains encoded Secret data, so I should avoid sharing it publicly. Kubernetes Secret values are commonly Base64-encoded; Base64 is encoding, not encryption.
+
+**Step 8: Verify the Application Resources**
+
+Finally, I checked the Kubernetes Pods and related resources to see whether the eCommerce workloads were running.
+
+This helped me understand that secret management is part of the deployment process: the application must receive the required configuration before it can connect successfully to its database or other services.
+
+### 2. Quick Technical Definitions
+
+| Term | Simple Definition |
+|---|---|
+| Secret | Sensitive information such as a password, token, or API key. |
+| Secret Management | The process of storing, controlling access to, and distributing sensitive information securely. |
+| Doppler | A secrets management platform that stores and provides application configuration and sensitive values. |
+| External Secrets Operator (ESO) | A Kubernetes operator that retrieves secrets from external providers and creates Kubernetes Secrets. |
+| Secret Provider | An external system that stores and supplies secrets, such as Doppler. |
+| SecretStore | A Kubernetes resource that configures access to a secret provider within a namespace. |
+| ClusterSecretStore | A SecretStore-like resource that can be referenced across namespaces, subject to its configuration and permissions. |
+| ExternalSecret | A Kubernetes custom resource that describes which external secret values to retrieve and how to create a Kubernetes Secret. |
+| Kubernetes Secret | A Kubernetes resource intended to store sensitive configuration data. |
+| Secret Synchronization | The process of retrieving external secret values and updating the corresponding Kubernetes Secret. |
+| Reconciliation | The operator's process of repeatedly checking whether the actual resources match the desired configuration and correcting differences. |
+| Secret Key | The name associated with a particular value inside a secret, such as `ORDER_DB_PASSWORD`. |
+| Environment Variable | A named configuration value that an application can read at runtime. |
+| Credentials | Information used to authenticate, such as a username and password. |
+| Base64 Encoding | A method of representing binary or text data as characters. It does not provide encryption or confidentiality. |
+| Least Privilege | Giving an application or user only the permissions needed to perform its task. |
+| RBAC | Role-Based Access Control; Kubernetes authorization based on roles and role bindings. |
+| Custom Resource Definition (CRD) | A Kubernetes extension that introduces a new resource type, such as `ExternalSecret`. |
+| Operator | Software that automates the management of an application or resource by observing its state and reconciling it. |
+| `kubectl apply -f` | Creates or updates Kubernetes resources using a manifest file. |
+| `kubectl get secrets` | Lists Kubernetes Secret resources in the selected namespace. |
+| `kubectl describe` | Displays detailed resource information, conditions, and events useful for troubleshooting. |
+
+### Important Note
+
+This recording demonstrates the Doppler and External Secrets Operator integration in the course environment. My final eCommerce deployment also uses **Doppler and External Secrets Operator** to manage application secrets in Kubernetes.
+
+For production security, I should avoid committing actual passwords or access tokens to GitHub, restrict access to secrets using RBAC, protect the external provider credentials, and enable appropriate encryption and access controls for Kubernetes Secrets.
+
+Also, an `ExternalSecret` resource showing up in `kubectl get externalsecret` does not prove that synchronization succeeded. I must verify its readiness condition, inspect events when errors occur, and confirm that the expected Kubernetes Secret was created successfully.
+
+# 17.6 Deploy Spring Boot eCommerce Microservices to Civo Kubernetes Using GitHub Actions
+
+https://github.com/user-attachments/assets/841b6bd4-78b7-4fb3-97b5-c7da54ecf1ab
+
+## 1. Workflow — What I Did in This Recording
+
+In Week 17.6, I continued working on my advanced Spring Boot eCommerce microservices project. The main objective was to deploy the application to a Civo Kubernetes cluster through GitHub Actions, troubleshoot a deployment issue, and verify that the application was running correctly and accepting API requests.
+
+My application uses Spring Boot microservices, PostgreSQL databases, Kubernetes service discovery through Kubernetes DNS, Config Server, Docker Hub, and GitHub Actions for automated CI/CD.
+
+During this stage, I encountered a Kubernetes rollout timeout while deploying the API Gateway. I investigated the deployment state, examined application logs and pod health, checked the node's memory usage, and verified the API Gateway health endpoint.
+
+The deployment subsequently completed successfully, and I verified that API requests were working.
+
+### Step 1: Review the Git Repository and Project Structure
+
+First, I worked in my local Git repository on Windows and inspected the Week 17 Kubernetes Advanced project.
+
+My repository details are:
+
+- **GitHub repository:** `Hemanth-coder638/spring-boot-learning`
+- **Local repository:** `C:\MySpringProjects\spring-boot-learning`
+- **Project directory:** `week-17-Kubernetes-Advanced/eCommerce`
+- **Git branch:** `main`
+
+The eCommerce project contains the following microservices and supporting components:
+
+- Discovery Service
+- Config Server
+- API Gateway
+- Inventory Service
+- Order Service
+- Shipping Service
+- PostgreSQL database for Inventory
+- PostgreSQL database for Orders
+- Zipkin for distributed tracing
+
+The application images are published to Docker Hub under the `hemanths5454` namespace.
+
+I also inspected the GitHub repository to verify that the project files were present remotely.
+
+**Important Git lesson:** Generated Maven `target` directories and Jib cache files appeared in the Git changes shown in my recording. These are build artifacts and normally should not be committed to the repository. I also noticed a file named `token.json`, i have ensured it does not contain credentials or access tokens.
+
+### Step 2: Configure the GitHub Actions CI/CD Workflow
+
+I used the GitHub Actions workflow:
+
+`.github/workflows/ecommerce-cicd.yml`
+
+The workflow automates the build, test, image publishing, and Kubernetes deployment process.
+
+The workflow builds and tests six services:
+
+1. Discovery Service
+2. API Gateway
+3. Config Server
+4. Inventory Service
+5. Order Service
+6. Shipping Service
+
+The workflow uses Java 21 and PostgreSQL 16 for CI testing. It creates the `orderDB` and `inventoryDB` databases and activates the `local` Spring profile for the relevant tests.
+
+After the build-and-test stage succeeds, the workflow publishes the required Docker images to Docker Hub and updates the corresponding deployments on Civo Kubernetes.
+
+The images are tagged using the Git commit associated with the workflow run. This helps connect a deployed application version to its source-code revision.
+
+### Step 3: Configure the Kubernetes Deployment Architecture
+
+For the Civo environment, I use the Spring profile `k8s`.
+
+The application uses Kubernetes DNS for service-to-service communication rather than relying on Eureka for runtime discovery.
+
+For example, the Config Server URL is:
+
+```text
+http://config-server:8888
+```
+
+The Discovery Service remains part of the GitHub Actions build-and-test matrix, but its image is not built and published for the Civo deployment because the Kubernetes environment uses native service discovery.
+
+This architecture allows the application services to communicate through Kubernetes Services and their DNS names.
+
+I retained the existing architecture rather than redesigning the application during deployment troubleshooting.
+
+### Step 4: Investigate the GitHub Actions API Gateway Deployment Failure
+
+During a GitHub Actions deployment, the API Gateway deployment step timed out.
+
+The important error message was:
+
+```text
+Waiting for deployment "api-gateway" rollout to finish:
+1 old replicas are pending termination...
+```
+
+The command eventually returned:
+
+```text
+error: timed out waiting for the condition
+```
+
+The rollout command was using a timeout of 180 seconds.
+
+This indicated that Kubernetes was waiting for an old API Gateway replica to terminate while completing the rollout. It did not automatically mean that the new application version had failed to start.
+
+A Kubernetes Deployment performs a rolling update by creating replacement Pods and gradually terminating old Pods, subject to the deployment strategy and available resources.
+
+When an old Pod takes too long to terminate, the rollout can exceed its configured timeout even when the new application instance has started successfully.
+
+I therefore needed to inspect the actual Kubernetes state instead of assuming that the entire application was down.
+
+### Step 5: Inspect API Gateway Logs and Application Startup
+
+Next, I examined the API Gateway logs to determine whether the new application version had started correctly.
+
+The logs showed the following:
+
+- The `k8s` Spring profile was active.
+- The API Gateway successfully fetched configuration from Config Server.
+- The Spring Boot application started.
+- Netty was listening on port `8080`.
+- A Zipkin connection-reset warning was also present.
+
+The successful configuration retrieval and application startup were important signs that the API Gateway itself was functioning.
+
+The Zipkin warning indicated a tracing connectivity issue at that time. It was not sufficient evidence to conclude that Zipkin caused the Kubernetes rollout timeout.
+
+This investigation helped separate application startup problems from Kubernetes rollout and infrastructure problems.
+
+### Step 6: Investigate Pod Eviction and Node Memory Usage
+
+I then examined the Kubernetes Pods and node resource usage.
+
+The observed node metrics were:
+
+| Resource | Observed usage |
+|---|---:|
+| CPU | 314 millicores (16%) |
+| Memory | 2,540 MiB (110%) |
+
+The reported memory usage was particularly important because it was above the displayed memory capacity reference.
+
+The pod memory usage at that time was approximately:
+
+| Pod | Memory usage |
+|---|---:|
+| API Gateway | 250 MiB |
+| Config Server | 205 MiB |
+| Inventory Database | 34 MiB |
+| Inventory Service | 263 MiB |
+| Order Database | 24 MiB |
+| Order Service | 148 MiB |
+| Shipping Service | 241 MiB |
+| Zipkin | 230 MiB |
+
+One API Gateway Pod was reported as evicted because the node was low on memory. The recorded exit code was `137`.
+
+Another API Gateway Pod was `Running` and had `Ready: True`, with zero restarts.
+
+These observations suggested that node memory pressure was a significant issue to investigate. However, the memory figures alone did not establish the exact cause of the eviction or prove that memory was the only reason for the rollout timeout.
+
+This is why I needed to inspect the node conditions, allocated resources, pod status, and Kubernetes events before choosing an infrastructure change.
+
+### Step 7: Verify the API Gateway Deployment State
+
+I checked the API Gateway Deployment and its related Kubernetes resources.
+
+The relevant commands for this investigation were:
+
+```powershell
+kubectl get deployment api-gateway -o wide
+kubectl get pods -o wide
+kubectl get rs
+kubectl describe deployment api-gateway
+```
+
+These commands help determine:
+
+- How many replicas the Deployment requests.
+- How many replicas have been updated and are ready.
+- Whether an old ReplicaSet still has Pods terminating.
+- Whether a Pod has been evicted or is failing.
+- Whether the Deployment is available despite an earlier rollout timeout.
+
+The Deployment description previously showed one available replica and zero unavailable replicas.
+
+This was evidence that the API Gateway was available at that time, even though the earlier GitHub Actions rollout command had timed out.
+
+I used this information to distinguish a deployment command timeout from an application that was completely unavailable.
+
+### Step 8: Verify the API Gateway Health Endpoint
+
+After inspecting the deployment, I verified the API Gateway health endpoint through Kubernetes port-forwarding.
+
+First, I ran the following command in one PowerShell window:
+
+```powershell
+kubectl port-forward deployment/api-gateway 18080:8080
+```
+
+This forwarded local port `18080` to port `8080` on the API Gateway Deployment.
+
+Then, in another PowerShell window, I executed:
+
+```powershell
+Invoke-WebRequest http://localhost:18080/actuator/health
+```
+
+The response was:
+
+```text
+StatusCode: 200
+StatusDescription: OK
+```
+
+The health endpoint returned:
+
+```json
+{
+  "status": "UP",
+  "groups": [
+    "liveness",
+    "readiness"
+  ]
+}
+```
+
+This confirmed that the health endpoint responded successfully through port-forwarding during the verification.
+
+It was an important step because it tested the running application rather than relying only on the GitHub Actions job result.
+
+A successful health check alone does not prove that every microservice, database, and external integration is healthy, so I also needed to verify the application API requests.
+
+### Step 9: Complete the Deployment and Verify API Requests
+
+After the deployment troubleshooting, the eCommerce application deployment completed successfully.
+
+I verified that the application was running and that API requests were working.
+
+This was the final functional validation of the deployment: the goal was not simply to make the GitHub Actions workflow green, but to ensure that the deployed application could actually respond to requests.
+
+The troubleshooting process demonstrated why CI/CD status, Kubernetes rollout status, Pod readiness, application health, and successful API requests should be checked together.
+
+A successful image build does not guarantee a successful rollout. Likewise, a rollout timeout does not automatically prove that the new application is unusable.
+
+The Kubernetes resource state and application responses provide the evidence needed to understand the real deployment status.
+
+### Step 10: Review Git Repository Hygiene
+
+During the recording, I also inspected Git changes and pushed project changes to the remote repository.
+
+The terminal showed a large number of files associated with generated Maven `target` directories and Jib cache artifacts. The output also showed a file named `token.json`.
+
+These observations highlighted an important repository-maintenance task.
+
+Build outputs and temporary container-image cache files should generally be excluded from source control because they increase repository size and can introduce unnecessary generated files into commits.
+
+A token file must also be checked before it is committed. If it contains a real credential that has already been pushed to GitHub, removing it in a later commit is not sufficient to invalidate the credential. The credential should be revoked or rotated.
+
+The recording does not establish whether `token.json` contained a live credential, so its contents and security impact must be verified separately.
+
+### Step 11: Consider Resource Improvements for Future Rollouts
+
+The investigation also identified an opportunity to improve the reliability of Kubernetes rolling updates.
+
+The node had reported high memory usage, and an API Gateway Pod had been evicted. Therefore, future deployment reliability depends on understanding the cluster's actual resource capacity.
+
+The appropriate checks include:
+
+```powershell
+kubectl top nodes
+kubectl top pods
+kubectl describe node k3s-ecommerce-cluster-f78f-1873c8-node-pool-92bb-b7j2h
+kubectl get events --sort-by='.lastTimestamp'
+```
+
+Depending on the evidence, possible improvements include:
+
+- Reducing unnecessary application memory consumption.
+- Reviewing existing Kubernetes memory requests and limits.
+- Checking the node's allocatable memory and the total resources requested by Pods.
+- Increasing Civo node capacity if the workload genuinely exceeds available resources.
+- Adjusting the rollout timeout if the application needs more time to complete an otherwise healthy update.
+
+Increasing the timeout alone does not solve memory exhaustion. Similarly, changing memory limits without understanding the workload can increase the risk of node pressure or container termination.
+
+These improvements should be based on actual resource measurements rather than assumptions.
+
+## 2. Quick Technical Definitions
+
+| Term | Simple Definition |
+|---|---|
+| Kubernetes | A platform for deploying, scaling, and managing containerized applications. |
+| Civo Kubernetes | A managed Kubernetes environment used to run the eCommerce application. |
+| CI/CD | Continuous Integration and Continuous Delivery or Deployment; automates testing, building, and releasing software. |
+| GitHub Actions | A GitHub automation platform that executes workflows for testing, image publishing, and deployment. |
+| Git Commit | A recorded snapshot of changes in a Git repository. |
+| Git Push | Sends local commits to a remote repository. |
+| Docker Hub | A container registry used to store and distribute Docker images. |
+| Jib | A tool for building container images for Java applications without requiring a traditional Dockerfile workflow. |
+| Spring Profile | A mechanism for selecting environment-specific Spring Boot configuration. |
+| Kubernetes DNS | A naming and discovery mechanism that allows Kubernetes workloads to communicate through Service names. |
+| Config Server | A service that provides external configuration to Spring Boot applications. |
+| API Gateway | An entry point that routes client requests to backend microservices. |
+| Deployment | A Kubernetes resource that manages application replicas and rolling updates. |
+| ReplicaSet | A Kubernetes resource that maintains the desired number of matching Pods. |
+| Pod | The smallest deployable Kubernetes workload unit, which can contain one or more containers. |
+| Rolling Update | A deployment strategy that gradually replaces old Pods with new ones. |
+| Rollout Timeout | The maximum time allowed for a rollout-status command to wait for completion. |
+| Pod Termination | The process through which Kubernetes shuts down a Pod. |
+| Pod Eviction | The removal of a Pod from a node, which can happen when the node experiences resource pressure. |
+| Exit Code 137 | Commonly indicates that a process was terminated by `SIGKILL`; the code alone does not prove the exact cause. |
+| MemoryPressure | A Kubernetes node condition indicating that memory availability has reached a pressure threshold. |
+| Memory Request | The amount of memory Kubernetes uses when making scheduling decisions for a container. |
+| Memory Limit | The configured upper memory boundary for a container, enforced by the container runtime and kernel. |
+| Allocatable Memory | The portion of node resources available for Kubernetes workloads after system reservations. |
+| `kubectl top` | Displays resource usage metrics for nodes and Pods when metrics are available. |
+| `kubectl describe` | Shows detailed resource information, status, conditions, and events. |
+| `kubectl rollout status` | Reports whether a Deployment rollout has completed. |
+| Port-Forwarding | Creates a connection from a local port to a port on a Kubernetes resource. |
+| Actuator Health Endpoint | A Spring Boot endpoint used to inspect application health. |
+| Readiness Probe | Determines whether a container is ready to receive traffic. |
+| Liveness Probe | Helps Kubernetes determine whether a container should be restarted. |
+| Zipkin | A distributed tracing system used to observe requests across microservices. |
+| Maven `target` Directory | A generated directory containing build outputs and other Maven-generated files. |
+| `.gitignore` | A Git configuration file that excludes specified untracked files and directories from normal Git tracking. |
+| Secret | Sensitive configuration data, such as a password, API key, or access token. |
+
+## 3. Important Lessons Learned
+
+### A. A GitHub Actions timeout is not always an application failure
+
+The API Gateway rollout command timed out while an old replica was pending termination. The new application had started, and a gateway Pod was reported as ready.
+
+Therefore, I investigated the live Kubernetes state instead of assuming that the application was entirely down.
+
+### B. Node memory must be investigated before changing rollout settings
+
+The observed memory usage was 2,540 MiB, reported as 110%, and an API Gateway Pod had been evicted because the node was low on memory.
+
+This made memory pressure an important investigation area. A longer rollout timeout could provide more time for a healthy update, but it would not resolve insufficient memory capacity.
+
+### C. Health checks and API requests provide functional evidence
+
+The `/actuator/health` endpoint returned HTTP 200 with `status: UP` during port-forwarding verification.
+
+The deployment subsequently completed, and API requests worked. Together, these checks helped validate the deployed application beyond the CI/CD build results.
+
+### D. Keep generated build artifacts out of Git
+
+Maven `target` directories and Jib cache artifacts should normally remain outside source control.
+
+A suitable `.gitignore` should exclude generated build output and local cache files while retaining source code, Maven build configuration, Kubernetes manifests, and GitHub Actions workflows.
+
+### E. Protect credentials before pushing to GitHub
+
+A file named `token.json` appeared in the recorded Git changes. Its contents must be verified without exposing any credentials.
+
+Real tokens should not be committed. If a credential has already been exposed in a remote repository, revoke or rotate it rather than relying only on deleting the file.
+
+### F. Verify the application before triggering another deployment
+
+A reliable deployment verification process checks the Deployment, ReplicaSets, Pods, node resources, health endpoint, and actual API responses.
+
+These checks help distinguish build failures, application startup failures, rollout delays, and infrastructure resource problems.
+
+## 4. Final Project Status
+
+At the end of this stage, my Week 17 advanced Kubernetes eCommerce project had completed its deployment successfully, and API requests were working.
+
+The project uses GitHub Actions to automate the build, test, image-publishing, and deployment workflow. The application runs on Civo Kubernetes, uses Kubernetes DNS for service discovery, retrieves configuration through Config Server, and uses PostgreSQL databases for Inventory and Orders.
+
+The API Gateway rollout timeout was investigated through Kubernetes deployment status, application logs, Pod readiness, memory usage, and health-endpoint verification.
+
+The main lesson from Week 17.6 is that **successful deployment requires more than a green CI/CD workflow: the Kubernetes workloads must be healthy, the infrastructure must have sufficient resources, and the deployed application must respond correctly to requests.**
+
 
 
 
