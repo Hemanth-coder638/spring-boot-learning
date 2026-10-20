@@ -224,6 +224,158 @@ This recording demonstrates the database and Zipkin setup on GKE as part of the 
 
 A StatefulSet and persistent volume help preserve database data, but they do not replace database backups or a proper recovery strategy.
 
+## 17.3 Microservices Setup with Kubernetes
+
+https://github.com/user-attachments/assets/ba56d4e0-a51a-4912-9dff-839b506cf850
+
+### 1. Workflow — What I Did in This Recording
+
+In this recording, I worked on deploying my eCommerce microservices to Kubernetes and verifying that the services could communicate with one another. I also checked the application through Postman and inspected the database from inside Kubernetes.
+
+**Step 1: Prepare the Microservices Configuration**
+
+First, I worked with the eCommerce project in IntelliJ IDEA. The project contains separate services for different responsibilities:
+
+- API Gateway
+- Config Server
+- Inventory Service
+- Order Service
+- Shipping Service
+
+I worked with the Kubernetes configuration files in the `k8s` folder. These YAML manifests describe how Kubernetes should run the microservices and expose them through Services.
+
+**Step 2: Build and Push the Microservice Docker Image**
+
+I built and pushed the Order Service image using Maven and Jib.
+
+Jib packages a Java application into a container image and can push the image directly to a container registry without requiring me to write a Dockerfile for every service.
+
+The image shown in the recording was:
+
+```text
+hemanths5454/ecommerce-order-service
+```
+
+After a successful build, the image was available in Docker Hub for Kubernetes to pull and run.
+
+**Step 3: Configure the Kubernetes Manifests**
+
+I worked with the Kubernetes YAML files for the microservices, including configurations for the API Gateway, Config Server, Inventory Service, Order Service, and Shipping Service.
+
+These manifests define resources such as Deployments and Services. A Deployment manages the application Pods, while a Service provides a stable network endpoint through which other components can reach them.
+
+**Step 4: Deploy the Microservices**
+
+I used `kubectl` to inspect and manage the resources in my Kubernetes cluster.
+
+For example, the following command lists the Pods:
+
+```bash
+kubectl get pods
+```
+
+In the recording, the output showed the Config Server, Inventory Service, Order Service, Shipping Service, Zipkin, and database Pods in the `Running` state, with their containers ready.
+
+**Step 5: Check the Kubernetes Scheduling Status**
+
+I also inspected Kubernetes events when a Pod was having difficulty starting.
+
+The output showed an `Insufficient memory` scheduling warning for a workload. This means Kubernetes could not find a suitable node with enough available memory to satisfy the Pod's resource requirements at that time.
+
+This helped me understand that deploying an application successfully requires not only correct YAML configuration but also sufficient cluster resources.
+
+**Step 6: Configure Communication Between Microservices**
+
+I inspected the Feign client configuration used by the Order Service to communicate with other services.
+
+For example, the `InventoryOpenFeignClient` interface defines methods for reducing and restoring inventory stock through the Inventory Service.
+
+The client configuration shown in the recording includes:
+
+```java
+@FeignClient(
+    name = "inventory-service",
+    path = "/inventory",
+    url = "${...}"
+)
+```
+
+The URL property is supplied through configuration. The exact value depends on the active application profile and configuration source.
+
+Feign allows the Order Service to call the Inventory Service through Java interfaces instead of manually constructing HTTP requests for every operation.
+
+**Step 7: Test the API Through Postman**
+
+Next, I opened Postman and sent a request to the API Gateway to obtain an access token.
+
+The request returned **HTTP 200 OK** with a token in the response. This demonstrated that the token endpoint was reachable and responding successfully at the time of the test.
+
+An access token can then be used to authorize requests to protected application endpoints.
+
+**Step 8: Verify the Database**
+
+Finally, I connected to PostgreSQL from inside the Order Database Pod using `kubectl exec` and the PostgreSQL command-line client.
+
+The command shown was:
+
+```bash
+kubectl exec -it order-db-0 -- psql -U user -d orderDB
+```
+
+Inside PostgreSQL, I ran:
+
+```sql
+\dt
+```
+
+The output listed the `order_item` and `orders` tables in the `orderDB` database.
+
+This demonstrated how I can access a database running inside Kubernetes and inspect its tables for troubleshooting and verification.
+
+### 2. Quick Technical Definitions
+
+| Term | Simple Definition |
+|---|---|
+| Microservices | An architecture in which an application is divided into smaller services with separate responsibilities. |
+| API Gateway | An entry point that routes client requests to the appropriate backend services. |
+| Config Server | A central service that provides configuration to application services. |
+| Inventory Service | The service responsible for inventory and stock-related operations. |
+| Order Service | The service responsible for order-related operations. |
+| Shipping Service | The service responsible for shipping-related operations. |
+| Docker Image | A packaged application template from which a container can be created. |
+| Docker Hub | A container registry where images can be stored and downloaded. |
+| Jib | A tool for building Java application container images and pushing them to a registry. |
+| Kubernetes Manifest | A YAML or JSON file describing the resources Kubernetes should create or manage. |
+| Deployment | A Kubernetes resource that manages application Pods and their updates. |
+| Service | A Kubernetes resource that provides a stable network endpoint for accessing Pods. |
+| Pod | The smallest deployable unit in Kubernetes, containing one or more containers. |
+| `kubectl get pods` | Lists Pods and their status in the selected namespace. |
+| `kubectl apply -f` | Creates or updates Kubernetes resources from a manifest file. |
+| Pod Scheduling | The process by which Kubernetes selects a suitable node to run a Pod. |
+| Resource Requests | The CPU and memory amounts Kubernetes uses when deciding where a Pod can be scheduled. |
+| Resource Limits | The maximum CPU and memory resources a container is allowed to use, subject to Kubernetes enforcement. |
+| Insufficient Memory | A scheduling condition in which available node memory cannot satisfy a Pod's memory request. |
+| OpenFeign | A declarative HTTP client that lets Java applications call remote services through interfaces. |
+| Feign Client | An interface configured to make HTTP requests to another service. |
+| Service-to-Service Communication | Communication between backend services using a network protocol such as HTTP. |
+| Postman | A tool for sending API requests and inspecting responses. |
+| HTTP 200 OK | An HTTP status indicating that a request succeeded. |
+| Access Token | A credential used to authorize access to protected APIs. |
+| `kubectl exec` | Executes a command inside a running container in a Kubernetes Pod. |
+| `psql` | The command-line client for connecting to and working with PostgreSQL. |
+| `\dt` | A PostgreSQL `psql` command that lists tables visible in the current database and schema search path. |
+| Zipkin | A distributed tracing tool for investigating requests across multiple microservices. |
+
+### Important Note
+
+This recording demonstrates microservice deployment and troubleshooting concepts using the GKE environment shown in the lesson. My final Week 17 eCommerce deployment uses **Civo Kubernetes**.
+
+The core concepts remain the same across Kubernetes providers. However, the image names, configuration values, resource requirements, storage configuration, and cluster access settings must match the actual deployment environment.
+
+A Pod showing `Running` does not automatically prove that the entire application is working correctly. I must also check container readiness, service connectivity, application logs, API responses, and database operations.
+
+
+
 
 
 
